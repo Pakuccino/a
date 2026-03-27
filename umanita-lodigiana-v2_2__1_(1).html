@@ -343,11 +343,18 @@ p{line-height:1.9;color:#2d4a35;font-size:0.97rem;margin-bottom:1rem;}
 .fdp-place{font-size:0.8rem;color:rgba(255,255,255,0.5);letter-spacing:0.15em;text-transform:uppercase;position:relative;}
 .fdp-timer{display:flex;justify-content:center;gap:1rem;margin-top:1.5rem;position:relative;}
 .fdp-timer .ct-unit{min-width:70px;}
-.cosa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem;}
-.cosa-item{background:#edf5f0;padding:1.1rem;border-top:2px solid var(--verde);}
-.cosa-item .icon{font-size:1.3rem;margin-bottom:0.4rem;display:block;}
-.cosa-item h4{font-size:0.8rem;color:var(--verde-scuro);margin-bottom:0.25rem;font-family:'Playfair Display',serif;}
-.cosa-item p{font-size:0.78rem;color:#3d6047;margin:0;line-height:1.5;}
+.cosa-carousel{position:relative;margin-top:1.5rem;overflow:hidden;}
+.cosa-track{display:flex;transition:transform 0.5s cubic-bezier(.4,0,.2,1);}
+.cosa-slide{min-width:100%;padding:2.2rem 2.5rem;background:#edf5f0;border-top:3px solid var(--verde);box-sizing:border-box;display:flex;gap:2rem;align-items:flex-start;}
+.cosa-slide .icon{font-size:3rem;flex-shrink:0;line-height:1;}
+.cosa-slide-body h4{font-size:1.15rem;color:var(--verde-scuro);margin-bottom:0.5rem;font-family:'Playfair Display',serif;}
+.cosa-slide-body p{font-size:0.9rem;color:#3d6047;margin:0;line-height:1.75;}
+.cosa-nav{display:flex;justify-content:space-between;align-items:center;margin-top:0.8rem;}
+.cosa-arrow{background:none;border:1.5px solid var(--verde);color:var(--verde);width:38px;height:38px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s,color 0.2s;}
+.cosa-arrow:hover{background:var(--verde);color:white;}
+.cosa-dots{display:flex;gap:0.45rem;}
+.cosa-dot{width:8px;height:8px;border-radius:50%;background:#c8e0cc;cursor:pointer;border:none;padding:0;transition:background 0.2s;}
+.cosa-dot.active{background:var(--verde);}
 .budget-table{width:100%;border-collapse:collapse;margin-top:1.2rem;}
 .budget-table td{padding:0.65rem 0.8rem;border-bottom:1px solid rgba(26,122,60,0.1);font-size:0.88rem;}
 .budget-table td:last-child{text-align:right;font-weight:600;color:var(--verde-scuro);}
@@ -384,7 +391,8 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
   nav ul{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(13,31,20,0.99);flex-direction:column;padding:1rem;gap:0.3rem;border-bottom:1px solid rgba(200,168,75,0.2);}
   nav ul.open{display:flex;}
   .hamburger{display:flex;}
-  .chi-grid,.cosa-grid,.contatti-grid,.stampa-grid{grid-template-columns:1fr;}
+  .chi-grid,.contatti-grid,.stampa-grid{grid-template-columns:1fr;}
+.cosa-slide{flex-direction:column;gap:0.8rem;padding:1.5rem 1.2rem;}
   .quick-links,.assi-strip{grid-template-columns:1fr 1fr;}
   .numeri-grid{grid-template-columns:repeat(2,1fr);}
   .countdown-inner{grid-template-columns:1fr;}
@@ -650,13 +658,20 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
     <!-- COSA ASPETTARSI -->
     <span class="section-label">Cosa aspettarsi</span>
     <h2>Una giornata da vivere</h2>
-    <div class="cosa-grid">
-      <div class="cosa-item"><span class="icon">🎭</span><h4>Spettacoli</h4><p>Regia affidata alle comunità straniere. Musica, danza e teatro dal vivo tutto il giorno.</p></div>
-      <div class="cosa-item"><span class="icon">🍽️</span><h4>Cibo dal Mondo</h4><p>Laboratori gastronomici con 15 comunità: sapori autentici di 22 nazioni in un unico parco.</p></div>
-      <div class="cosa-item"><span class="icon">⚽</span><h4>Torneo di Calcio</h4><p>Squadre formate dalle comunità: lo sport come linguaggio universale di incontro.</p></div>
-      <div class="cosa-item"><span class="icon">🎨</span><h4>Laboratori creativi</h4><p>Workshop per adulti e bambini: artigianato, arte e tradizioni da tutto il mondo.</p></div>
-      <div class="cosa-item"><span class="icon">💬</span><h4>Riflessioni</h4><p>Momenti di confronto su pace, ambiente e diritti. Con esperti, comunità e istituzioni locali.</p></div>
-      <div class="cosa-item"><span class="icon">🌍</span><h4>22 Nazioni</h4><p>Comunità italiane e straniere che vivono nel Lodigiano: protagoniste, non ospiti.</p></div>
+    <div class="cosa-carousel" id="cosaCarousel">
+      <div class="cosa-track" id="cosaTrack">
+        <div class="cosa-slide"><span class="icon">🎭</span><div class="cosa-slide-body"><h4>Spettacoli</h4><p>Regia affidata alle comunità straniere. Musica, danza e teatro dal vivo tutto il giorno: un palco che racconta il mondo senza traduttori.</p></div></div>
+        <div class="cosa-slide"><span class="icon">🍽️</span><div class="cosa-slide-body"><h4>Cibo dal Mondo</h4><p>Laboratori gastronomici con 15 comunità: sapori autentici di 22 nazioni in un unico parco. Perché condividere un piatto è il gesto più antico di pace.</p></div></div>
+        <div class="cosa-slide"><span class="icon">⚽</span><div class="cosa-slide-body"><h4>Torneo di Calcio</h4><p>Squadre formate dalle comunità: lo sport come linguaggio universale di incontro. Sul campo non esistono stranieri, solo giocatori.</p></div></div>
+        <div class="cosa-slide"><span class="icon">🎨</span><div class="cosa-slide-body"><h4>Laboratori creativi</h4><p>Workshop per adulti e bambini: artigianato, arte e tradizioni da tutto il mondo. Mani che lavorano insieme creano ponti che durano.</p></div></div>
+        <div class="cosa-slide"><span class="icon">💬</span><div class="cosa-slide-body"><h4>Riflessioni</h4><p>Momenti di confronto su pace, ambiente e diritti. Con esperti, comunità e istituzioni locali. Perché il dialogo è il primo atto di giustizia.</p></div></div>
+        <div class="cosa-slide"><span class="icon">🌍</span><div class="cosa-slide-body"><h4>22 Nazioni</h4><p>Comunità italiane e straniere che vivono nel Lodigiano: protagoniste assolute, non ospiti. La loro regia, la loro voce, la loro festa.</p></div></div>
+      </div>
+      <div class="cosa-nav">
+        <button class="cosa-arrow" id="cosaPrev">&#8592;</button>
+        <div class="cosa-dots" id="cosaDots"></div>
+        <button class="cosa-arrow" id="cosaNext">&#8594;</button>
+      </div>
     </div>
 
     <!-- L'EDIZIONE 2025 -->
@@ -1148,6 +1163,31 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
       </div>
       <div id="c-ok" style="display:none;margin-top:1rem;background:#d4edda;color:#155724;padding:0.8rem 1.2rem;border-radius:4px;font-size:0.9rem;">✓ Grazie! Il tuo messaggio è stato inviato. Ti risponderemo presto
 
+        <script>
+(function(){
+  var track=document.getElementById('cosaTrack');
+  var dotsEl=document.getElementById('cosaDots');
+  if(!track||!dotsEl)return;
+  var slides=track.children;
+  var cur=0,timer;
+  for(var i=0;i<slides.length;i++){
+    var d=document.createElement('button');
+    d.className='cosa-dot'+(i===0?' active':'');
+    d.dataset.i=i;
+    d.addEventListener('click',(function(idx){return function(){go(idx);restart();};})(i));
+    dotsEl.appendChild(d);
+  }
+  function go(n){
+    cur=(n+slides.length)%slides.length;
+    track.style.transform='translateX(-'+cur*100+'%)';
+    dotsEl.querySelectorAll('.cosa-dot').forEach(function(d,i){d.classList.toggle('active',i===cur);});
+  }
+  document.getElementById('cosaPrev').addEventListener('click',function(){go(cur-1);restart();});
+  document.getElementById('cosaNext').addEventListener('click',function(){go(cur+1);restart();});
+  function restart(){clearInterval(timer);timer=setInterval(function(){go(cur+1);},4000);}
+  restart();
+})();
+</script>
         <script>
 (function(){
   const words = ["Umanità","Humanity","Humanidad","Humanité","إنسانية","人道","Menschlichkeit","Humanidade","İnsanlık","Человечность"];
