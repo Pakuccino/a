@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <script>
+  // Make showPage globally available immediately
+window.showPage = function(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav ul a').forEach(a => a.classList.remove('active'));
+  var page = document.getElementById('page-' + id);
+  if (page) { page.classList.add('active'); window.scrollTo(0,0); }
+  var link = document.querySelector('nav ul a[data-goto="' + id + '"]');
+  if (link) link.classList.add('active');
+  var menu = document.getElementById('navMenu');
+  if (menu) menu.classList.remove('open');
+  if (id === 'storia') setTimeout(animateTimeline, 80);
+  return false;
+};
+window.toggleMenu = function() {
+  var m = document.getElementById('navMenu');
+  if(m) m.classList.toggle('open');
+};
+
+// ===== TRANSLATIONS =====
+var TRANSLATIONS = {
+  it: {
+    nav_home:'Home', nav_chi:'Chi siamo', nav_storia:'Storia', nav_festa:'Festa dei Popoli', nav_aderenti:'Aderenti', nav_contatti:'Contatti',
+    hero_anno:'Dal 2009 · Lodi e Provincia', hero_sub:'Rete informale che unisce associazioni, comunità straniere, cooperative e cittadini attorno ai valori di integrazione, mobilità lenta e sostenibilità.',
+    hero_stat1:'Enti nella rete', hero_stat2:'Persone fisiche', hero_stat3:'Nazioni',
+    countdown_label:'Prossimo grande appuntamento', countdown_place:'📍 Parco Martiri della Libertà, Lodi',
+    countdown_days:'Giorni', countdown_hours:'Ore', countdown_mins:'Min', countdown_secs:'Sec',
+    cd_tags_label:'Laboratori · Musica · Cibo dal mondo · Calcio · Spettacoli · Giochi',
+    cd_desc:'Inclusione · Voce alle donne · Diversità come ricchezza.<br>Una giornata intera di arte, culture, sapori e incontri tra 22 nazioni.',
+    btn_scopri:'Scopri tutto →', btn_sostieni:'Sostienici',
+    chi_label:'Chi siamo', chi_title:'Una rete nata dal basso', chi_sub:'L\'Umanità Lodigiana unisce dal 2009 associazioni, comunità straniere, cooperative, parrocchie e cittadini attorno a tre valori fondamentali.',
+    asse1_title:'Integrazione', asse1_desc:'Incontro tra comunità italiane e straniere del Lodigiano',
+    asse2_title:'Mobilità Lenta', asse2_desc:'Ciclo-staffette che uniscono i borghi del territorio',
+    asse3_title:'Ambiente', asse3_desc:'Comunità Energetiche Rinnovabili Solidali (CER)',
+    numeri_label:'La forza della rete', numeri_title:'Sedici anni di storia comune',
+    n1_label:'Partecipanti Festa 2025', n2_label:'Enti nella rete', n3_label:'Nazioni alla Festa', n4_label:'Grandi eventi',
+    aderenti_ph_label:'La rete', aderenti_title:'Chi aderisce', aderenti_sub:'182 enti e 166 persone fisiche che credono in un Lodigiano più giusto e accogliente',
+    a1_label:'Enti aderenti', a2_label:'Persone fisiche', a3_label:'Nazioni', a4_label:'Anno di inizio',
+    bisogno_label:'Trova soluzioni', bisogno_title:'Di cosa hai bisogno?',
+    f_tutti:'🌐 Tutti', f_aiuto:'🤝 Aiuto sociale', f_cultura:'🎭 Cultura', f_ambiente:'🌱 Ambiente',
+    f_giovani:'🎒 Giovani & scuola', f_lavoro:'💼 Lavoro', f_comunita:'🌍 Comunità straniere',
+    f_spirituale:'✝ Spirituale', f_cooperativa:'🏢 Cooperative',
+    search_placeholder:'Cerca per nome...', found_suffix_s:' ente trovato', found_suffix_p:' enti trovati',
+    vol_label:'Festa dei Popoli 23 Maggio 2026', vol_title:'Vuoi fare il volontario?',
+    vol_desc:'Giovani, pensionati, G2: c\'è posto per tutti. Iscriviti e ti smisteremo all\'associazione giusta per la tua disponibilità.',
+    vol_btn:'📋 Iscriviti come volontario →', vol_nome:'Il tuo nome', vol_contatto:'Email o telefono',
+    vol_fascia_default:'Fascia oraria disponibile il 23 maggio',
+    vol_f1:'Mattina (10:00–13:00)', vol_f2:'Pomeriggio (14:00–18:00)', vol_f3:'Sera (18:00–22:00)', vol_f4:'Tutta la giornata',
+    vol_note:'Competenze o preferenze (cucina, palco, accoglienza...)', vol_invia:'Invia iscrizione →',
+    vol_ok:'✓ Iscrizione inviata! Ti contatteremo presto.',
+    join_text:'Vuoi unire la tua realtà alla rete?', join_link:'Contattaci →',
+    contatti_ph_label:'Entra in rete', contatti_title:'Contatti', contatti_sub:'Sei un\'associazione, una comunità o un cittadino del Lodigiano? La rete è aperta a tutti.',
+    wa_label:'Scrivici su WhatsApp', email_label:'Mandaci un\'email',
+    form_label:'Modulo di contatto', form_title:'Scrivici direttamente',
+    form_desc:'Il tuo messaggio arriverà alla nostra email e potremo risponderti anche via WhatsApp.',
+    f_nome_label:'Nome e cognome *', f_email_label:'Email *', f_tel_label:'Telefono / WhatsApp',
+    f_tipo_label:'Tipo di richiesta', f_tipo_default:'Seleziona...',
+    f_tipo1:'Voglio aderire alla rete', f_tipo2:'Informazioni sulla Festa dei Popoli',
+    f_tipo3:'Volontariato', f_tipo4:'Donazione o sponsorship', f_tipo5:'Collaborazione tra associazioni', f_tipo6:'Altro',
+    f_msg_label:'Messaggio *', f_msg_placeholder:'Scrivi il tuo messaggio qui...',
+    f_invia:'Invia messaggio →', f_wa:'💬 Apri WhatsApp',
+    f_ok:'✓ Grazie! Il tuo messaggio è stato inviato. Ti risponderemo presto via email o WhatsApp.',
+    footer_text:'© Umanità Lodigiana · Rete informale attiva dal 2009 ·'
+  }
+};
+window.filterEnti = function(q) {
+  var enti = document.querySelectorAll('#entiList .ente');
+  var lower = q.toLowerCase(); var found = 0;
+  var activeCat = document.querySelector('.bisogno-btn.active');
+  var cat = activeCat ? activeCat.getAttribute('data-bisogno') : 'tutti';
+  enti.forEach(function(el){
+    var matchText = el.textContent.toLowerCase().includes(lower);
+    var matchCat = cat === 'tutti' || el.getAttribute('data-cat') === cat;
+    if(matchText && matchCat){el.classList.remove('hidden');found++;}else el.classList.add('hidden');
+  });
+  var nr = document.getElementById('noResults');
+  if(nr) nr.style.display = found===0?'block':'none';
+  var fc = document.getElementById('filtroCount');
+  if(fc) fc.textContent = found + (found===1?' ente trovato':' enti trovati');
+};
+
+window.filterPerBisogno = function(cat) {
+  document.querySelectorAll('.bisogno-btn').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.querySelector('.bisogno-btn[data-bisogno="'+cat+'"]');
+  if(btn) btn.classList.add('active');
+  var q = document.getElementById('searchBox') ? document.getElementById('searchBox').value : '';
+  var enti = document.querySelectorAll('#entiList .ente');
+  var found = 0;
+  enti.forEach(function(el){
+    var matchText = el.textContent.toLowerCase().includes(q.toLowerCase());
+    var matchCat = cat === 'tutti' || el.getAttribute('data-cat') === cat;
+    if(matchText && matchCat){el.classList.remove('hidden');found++;}else el.classList.add('hidden');
+  });
+  var nr = document.getElementById('noResults');
+  if(nr) nr.style.display = found===0?'block':'none';
+  var fc = document.getElementById('filtroCount');
+  if(fc) fc.textContent = found + (found===1?' ente trovato':' enti trovati');
+};
+
+window.inviaVolontario = function() {
+  var nome = document.getElementById('vol-nome').value.trim();
+  var contatto = document.getElementById('vol-contatto').value.trim();
+  var fascia = document.getElementById('vol-fascia').value;
+  var note = document.getElementById('vol-note').value.trim();
+  if(!nome || !contatto) { alert('Inserisci nome e contatto per procedere.'); return; }
+  var msg = 'Nuova iscrizione volontario Festa dei Popoli 2026:\n\nNome: '+nome+'\nContatto: '+contatto+'\nDisponibilità: '+fascia+'\nNote: '+note;
+  var wa = 'https://wa.me/393701112314?text='+encodeURIComponent(msg);
+  window.open(wa, '_blank');
+  document.getElementById('vol-ok').style.display='block';
+};
+
+window.inviaContatto = function() {
+  var nome = document.getElementById('c-nome').value.trim();
+  var email = document.getElementById('c-email').value.trim();
+  var tel = document.getElementById('c-tel').value.trim();
+  var tipo = document.getElementById('c-tipo').value;
+  var msg = document.getElementById('c-msg').value.trim();
+  if(!nome || !email || !msg) { alert('Compila i campi obbligatori (nome, email, messaggio).'); return; }
+  var subject = encodeURIComponent('Contatto dal sito – ' + (tipo||'Informazioni'));
+  var body = encodeURIComponent('Nome: '+nome+'\nEmail: '+email+(tel?'\nTelefono: '+tel:'')+'\nRichiesta: '+tipo+'\n\n'+msg);
+  window.location.href = 'mailto:info@umanitalodigiana.it?subject='+subject+'&body='+body;
+  document.getElementById('c-ok').style.display='block';
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Wire up data-goto links
+  document.querySelectorAll('[data-goto]').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      showPage(this.getAttribute('data-goto'));
+    });
+  });
+
+  // Hamburger
+  var hb = document.getElementById('hamburgerBtn');
+  if(hb) hb.addEventListener('click', toggleMenu);
+
+  // Nav active state: set home as default
+  var homeLink = document.querySelector('nav ul a[data-goto="home"]');
+  if(homeLink) homeLink.classList.add('active');
+
+  // Countdown
+  function updateCountdown() {
+    var target = new Date('2026-05-23T10:00:00');
+    var now = new Date();
+    var diff = target - now;
+    if (diff <= 0) diff = 0;
+    var days  = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    var mins  = Math.floor((diff % 3600000) / 60000);
+    var secs  = Math.floor((diff % 60000) / 1000);
+    [['h-days','f-days',days],['h-hours','f-hours',hours],['h-mins','f-mins',mins],['h-secs','f-secs',secs]].forEach(function(row){
+      var ea = document.getElementById(row[0]);
+      var eb = document.getElementById(row[1]);
+      var str = String(row[2]).padStart(2,'0');
+      if(ea) ea.textContent = str;
+      if(eb) eb.textContent = str;
+    });
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+});
+
+// Timeline animation
+function animateTimeline() {
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.tl-item').forEach(function(el){ el.classList.remove('visible'); obs.observe(el); });
+}
+
+
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Umanità Lodigiana</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--verde:#1a7a3c;--verde-scuro:#0f5228;--verde-chiaro:#2ea856;--grano:#c8a84b;--crema:#f4f9f5;--notte:#0d1f14;--testo:#1a2e1f;}
+html{scroll-behavior:smooth;}
+body{font-family:'Source Serif 4',Georgia,serif;background:var(--crema);color:var(--testo);overflow-x:hidden;}
+
+/* NAV */
+#cursor{animation:blink 0.7s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(13,31,20,0.97);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:0.65rem 2rem;border-bottom:1px solid rgba(200,168,75,0.2);}
+.nav-logo{display:flex;align-items:center;gap:0.7rem;cursor:pointer;}
+.nav-logo img{height:40px;width:40px;border-radius:50%;object-fit:contain;background:white;padding:2px;}
+.nav-logo span{font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--grano);}
+nav ul{list-style:none;display:flex;gap:0.2rem;}
+nav ul li a{color:rgba(244,249,245,0.7);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 0.7rem;border-radius:3px;transition:all 0.25s;display:block;}
+nav ul li a:hover,nav ul li a.active{color:white;background:var(--verde);}
+nav ul li a.festa-link{color:var(--grano);border:1px solid rgba(200,168,75,0.3);position:relative;overflow:hidden;animation:festaExtreme 3s ease-in-out infinite, festaShake 3s ease-in-out infinite;}
+nav ul li a.festa-link::before{content:'';position:absolute;top:-50%;left:-75%;width:50%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,220,120,0.3),transparent);animation:festaSweep 5s ease-in-out infinite;}
+@keyframes festaExtreme{0%,100%{box-shadow:0 0 8px rgba(200,168,75,0.3),0 0 15px rgba(200,168,75,0.15);border-color:rgba(200,168,75,0.4);color:#c8a84b;background:transparent;}25%{box-shadow:0 0 20px rgba(200,168,75,0.7),0 0 40px rgba(200,168,75,0.4),0 0 70px rgba(200,168,75,0.2),0 0 100px rgba(200,168,75,0.08);border-color:rgba(255,220,100,1);color:#fff5d0;background:rgba(200,168,75,0.2);}50%{box-shadow:0 0 5px rgba(200,168,75,0.2),0 0 10px rgba(200,168,75,0.1);border-color:rgba(200,168,75,0.5);color:#c8a84b;background:transparent;}75%{box-shadow:0 0 25px rgba(255,180,50,0.8),0 0 50px rgba(255,180,50,0.4),0 0 80px rgba(255,150,30,0.2),0 0 120px rgba(255,120,20,0.1);border-color:rgba(255,200,80,1);color:#fffbe0;background:rgba(255,180,50,0.15);}}
+@keyframes festaShake{0%,4%,8%,100%{transform:translateX(0);}1%{transform:translateX(-2px) rotate(-0.5deg);}2%{transform:translateX(2px) rotate(0.5deg);}3%{transform:translateX(-1.5px) rotate(-0.3deg);}5%{transform:translateX(1px) rotate(0.2deg);}6%{transform:translateX(-1px);}7%{transform:translateX(0.5px);}}
+@keyframes festaSweep{0%{left:-75%;}50%{left:125%;}100%{left:125%;}}
+nav ul li a.festa-link:hover,nav ul li a.festa-link.active{background:var(--grano);color:var(--notte);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;}
+.hamburger span{width:22px;height:2px;background:var(--grano);transition:all 0.3s;}
+
+/* PAGES */
+.page{display:none;min-height:100vh;padding-top:62px;animation:pageFade 0.3s ease;}
+.page.active{display:block;}
+@keyframes pageFade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* TYPOGRAPHY */
+h2{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:1.2;margin-bottom:1.1rem;color:var(--notte);}
+h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--verde-scuro);margin-bottom:0.6rem;}
+p{line-height:1.9;color:#2d4a35;font-size:0.97rem;margin-bottom:1rem;}
+.section-label{font-size:0.66rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--verde);margin-bottom:0.6rem;display:block;}
+.section-label.gold{color:var(--grano);}
+.page-body{max-width:960px;margin:0 auto;padding:3rem 2rem;}
+
+/* BUTTONS */
+.btn{padding:0.65rem 1.4rem;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:all 0.25s;font-family:'Source Serif 4',serif;display:inline-block;}
+.btn-verde{background:var(--verde);color:white;}.btn-verde:hover{background:var(--verde-chiaro);}
+.btn-grano{background:var(--grano);color:var(--notte);}.btn-grano:hover{background:#d4b53a;}
+.btn-outline{background:transparent;color:rgba(244,249,245,0.8);border:1px solid rgba(244,249,245,0.3);}.btn-outline:hover{border-color:var(--grano);color:var(--grano);}
+.btn-outline-dark{background:transparent;color:var(--verde);border:1px solid rgba(26,122,60,0.35);}.btn-outline-dark:hover{background:var(--verde);color:white;}
+
+
+.bisogno-btn{padding:0.5rem 1rem;border:1.5px solid rgba(200,168,75,0.3);background:transparent;color:rgba(244,249,245,0.65);font-family:'Source Serif 4',serif;font-size:0.8rem;border-radius:30px;cursor:pointer;transition:all 0.2s;letter-spacing:0.03em;}
+.bisogno-btn:hover{border-color:var(--grano);color:var(--grano);}
+.bisogno-btn.active{background:var(--grano);color:var(--notte);border-color:var(--grano);font-weight:600;}
+
+/* PAGE HEADER */
+.page-header{background:var(--verde-scuro);padding:3rem 2rem 2.5rem;text-align:center;}
+.page-header .ph-label{font-size:0.66rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(200,168,75,0.75);margin-bottom:0.5rem;display:block;}
+.page-header h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);color:#f4f9f5;}
+.page-header .ph-sub{color:rgba(244,249,245,0.58);margin-top:0.6rem;font-size:0.92rem;max-width:580px;margin-left:auto;margin-right:auto;line-height:1.7;}
+
+/* HOME HERO */
+.hero{min-height:88vh;background:radial-gradient(ellipse at 25% 60%,rgba(26,122,60,0.28) 0%,transparent 55%),radial-gradient(ellipse at 78% 25%,rgba(15,82,40,0.18) 0%,transparent 50%),var(--notte);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3.5rem 2rem 3rem;position:relative;}
+.hero-logo{width:88px;height:88px;border-radius:50%;object-fit:contain;background:white;padding:6px;margin-bottom:1.5rem;box-shadow:0 0 50px rgba(26,122,60,0.45);animation:fadeUp 0.7s 0.1s ease both;}
+.hero-anno{font-size:0.68rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--grano);margin-bottom:0.8rem;animation:fadeUp 0.7s 0.2s ease both;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.6rem,7vw,5.8rem);line-height:1.05;color:#f4f9f5;animation:fadeUp 0.8s 0.3s ease both;}
+.hero h1 em{font-style:italic;color:var(--verde-chiaro);}
+.hero-sub{margin-top:1rem;font-size:clamp(0.88rem,2vw,1.05rem);font-weight:300;color:rgba(244,249,245,0.58);max-width:460px;line-height:1.85;animation:fadeUp 0.9s 0.45s ease both;}
+.hero-stats{display:flex;gap:2rem;margin-top:2.2rem;animation:fadeUp 1s 0.6s ease both;flex-wrap:wrap;justify-content:center;}
+.stat .num{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde-chiaro);display:block;}
+.stat .label{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(244,249,245,0.4);}
+.hero-cta{display:flex;gap:0.8rem;margin-top:2rem;animation:fadeUp 1s 0.75s ease both;flex-wrap:wrap;justify-content:center;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+
+/* HOME BLOCKS */
+.home-block{padding:4rem 2rem;}
+.home-block.dark{background:var(--notte);}
+.home-block.light{background:var(--crema);}
+.home-block.muted{background:#edf5f0;}
+.home-block.verde{background:var(--verde);}
+.hb-container{max-width:960px;margin:0 auto;}
+
+/* QUICK LINKS ROW under hero */
+.quick-links{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:rgba(255,255,255,0.04);animation:fadeUp 1s 0.9s ease both;}
+.ql-item{padding:1.3rem 1rem;text-align:center;cursor:pointer;border-right:1px solid rgba(255,255,255,0.06);transition:background 0.2s;text-decoration:none;display:block;}
+.ql-item:last-child{border-right:none;}
+.ql-item:hover{background:rgba(26,122,60,0.25);}
+.ql-icon{font-size:1.4rem;display:block;margin-bottom:0.3rem;}
+.ql-label{font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(244,249,245,0.55);}
+
+/* COUNTDOWN */
+.countdown-section{background:linear-gradient(135deg,var(--verde-scuro) 0%,#1a4d2e 100%);padding:0;}
+.countdown-inner{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;}
+.countdown-poster{overflow:hidden;max-height:600px;}
+.countdown-poster img{width:100%;height:100%;object-fit:cover;display:block;}
+.countdown-content{padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:center;}
+.countdown-content .cd-label{font-size:0.68rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(200,168,75,0.75);margin-bottom:0.8rem;display:block;}
+.countdown-content h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);color:white;margin-bottom:0.4rem;}
+.cd-titolo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;color:var(--grano);margin-bottom:1rem;}
+.cd-date{font-family:'Playfair Display',serif;font-size:clamp(2.5rem,5vw,4rem);color:white;line-height:1;margin-bottom:0.4rem;}
+.cd-place{font-size:0.82rem;color:rgba(255,255,255,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.5rem;}
+.countdown-timer{display:flex;gap:1rem;margin-bottom:1.8rem;flex-wrap:wrap;}
+.ct-unit{text-align:center;background:rgba(255,255,255,0.08);border:1px solid rgba(200,168,75,0.2);padding:0.8rem 1rem;min-width:64px;}
+.ct-num{font-family:'Playfair Display',serif;font-size:2rem;color:var(--grano);display:block;line-height:1;}
+.ct-label{font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.4);display:block;margin-top:0.2rem;}
+.cd-tags{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:1.5rem;}
+.cd-tag{padding:0.22rem 0.6rem;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;border:1px solid rgba(200,168,75,0.35);color:var(--grano);}
+.cd-desc{color:rgba(244,249,245,0.65);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;}
+.cd-cta{display:flex;gap:0.7rem;flex-wrap:wrap;}
+
+/* CHI SIAMO BLOCK */
+.chi-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start;}
+.decor-box{background:var(--verde-scuro);padding:2.2rem;position:relative;}
+.decor-box::before{content:'';position:absolute;top:-9px;left:-9px;right:9px;bottom:9px;border:2px solid var(--grano);z-index:-1;}
+.quote{font-family:'Playfair Display',serif;font-size:1.15rem;font-style:italic;color:var(--grano);line-height:1.65;}
+.quote-attr{margin-top:0.8rem;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(244,249,245,0.42);}
+
+/* ASSI STRIP */
+.assi-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid rgba(26,122,60,0.12);margin-top:2rem;}
+.asse-item{padding:2rem 1.5rem;border-right:1px solid rgba(26,122,60,0.12);}
+.asse-item:last-child{border-right:none;}
+.asse-item .ai-icon{font-size:1.8rem;margin-bottom:0.7rem;display:block;}
+.asse-item h3{font-size:1rem;color:var(--verde-scuro);margin-bottom:0.4rem;}
+.asse-item p{font-size:0.84rem;color:#3d6047;line-height:1.6;margin:0;}
+
+/* NUMERI GRID */
+.numeri-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(26,122,60,0.1);margin-top:1.5rem;}
+.numero-item{background:var(--crema);padding:1.5rem;text-align:center;}
+.numero-item .n{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--verde);display:block;}
+.numero-item .l{font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#5a8a6a;display:block;margin-top:0.2rem;}
+.numeri-grid.dark .numero-item{background:rgba(255,255,255,0.04);}
+.numeri-grid.dark .numero-item .n{color:var(--verde-chiaro);}
+.numeri-grid.dark .numero-item .l{color:rgba(244,249,245,0.4);}
+
+/* CITAZIONE STRIP */
+.citazione-strip{background:var(--verde);padding:2.8rem 2rem;text-align:center;}
+.citazione-strip blockquote{font-family:'Playfair Display',serif;font-size:clamp(1.2rem,2.5vw,1.8rem);font-style:italic;color:white;max-width:700px;margin:0 auto;line-height:1.5;}
+.citazione-strip cite{display:block;margin-top:0.8rem;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-style:normal;}
+
+/* STAMPA */
+.stampa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:1.5rem;}
+.stampa-item{background:white;border-left:3px solid var(--verde);padding:1.1rem 1.3rem;box-shadow:0 2px 6px rgba(0,0,0,0.04);}
+.stampa-item .src{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--verde);margin-bottom:0.35rem;display:block;}
+.stampa-item p{font-size:0.85rem;margin:0;color:var(--testo);line-height:1.6;font-style:italic;}
+
+/* ADERENTI PREVIEW */
+.aderenti-preview{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:1.2rem;}
+.ente-chip{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(244,249,245,0.65);font-size:0.72rem;padding:0.25rem 0.6rem;letter-spacing:0.03em;}
+
+/* STORIA PAGE */
+.timeline{position:relative;}
+.timeline::before{content:'';position:absolute;left:75px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--verde),transparent);}
+.tl-item{display:flex;gap:1.5rem;margin-bottom:2rem;opacity:0;transform:translateX(-16px);transition:all 0.5s ease;}
+.tl-item.visible{opacity:1;transform:translateX(0);}
+.tl-anno{font-family:'Playfair Display',serif;font-size:0.85rem;font-weight:700;color:var(--verde-scuro);min-width:55px;text-align:right;padding-top:0.15rem;position:relative;flex-shrink:0;}
+.tl-anno::after{content:'';position:absolute;right:-19px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--grano);border:2px solid var(--crema);}
+.tl-content{flex:1;padding-left:1.2rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(26,122,60,0.1);}
+.tl-content h4{font-family:'Playfair Display',serif;font-size:1rem;color:var(--notte);margin-bottom:0.25rem;}
+.tl-content p{font-size:0.88rem;color:#3d6047;margin:0 0 0.4rem 0;line-height:1.6;}
+.tl-badge{display:inline-block;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;background:var(--verde);color:white;padding:0.15rem 0.5rem;border-radius:2px;margin-top:0.2rem;}
+
+/* FESTA PAGE */
+.festa-hero-page{background:linear-gradient(135deg,#0d2b18 0%,var(--verde-scuro) 60%,#1a4d2e 100%);padding:3.5rem 2rem;text-align:center;position:relative;overflow:hidden;}
+.festa-hero-page::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(200,168,75,0.12) 0%,transparent 60%);}
+.festa-hero-page h1{font-family:'Playfair Display',serif;color:white;font-size:clamp(2rem,5vw,3.5rem);position:relative;}
+.fdp-titolo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;color:var(--grano);margin:0.5rem 0;position:relative;}
+.fdp-date{font-family:'Playfair Display',serif;font-size:clamp(3rem,7vw,5rem);color:white;line-height:1;margin:0.8rem 0;position:relative;}
+.fdp-place{font-size:0.8rem;color:rgba(255,255,255,0.5);letter-spacing:0.15em;text-transform:uppercase;position:relative;}
+.fdp-timer{display:flex;justify-content:center;gap:1rem;margin-top:1.5rem;position:relative;}
+.fdp-timer .ct-unit{min-width:70px;}
+.cosa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem;}
+.cosa-item{background:#edf5f0;padding:1.1rem;border-top:2px solid var(--verde);}
+.cosa-item .icon{font-size:1.3rem;margin-bottom:0.4rem;display:block;}
+.cosa-item h4{font-size:0.8rem;color:var(--verde-scuro);margin-bottom:0.25rem;font-family:'Playfair Display',serif;}
+.cosa-item p{font-size:0.78rem;color:#3d6047;margin:0;line-height:1.5;}
+.budget-table{width:100%;border-collapse:collapse;margin-top:1.2rem;}
+.budget-table td{padding:0.65rem 0.8rem;border-bottom:1px solid rgba(26,122,60,0.1);font-size:0.88rem;}
+.budget-table td:last-child{text-align:right;font-weight:600;color:var(--verde-scuro);}
+.budget-table tr:last-child td{border-bottom:none;font-size:1rem;color:var(--notte);background:#edf5f0;}
+.support-box{background:var(--verde-scuro);color:white;padding:2rem;margin-top:2rem;text-align:center;}
+.support-box h3{color:var(--grano);font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:0.7rem;}
+.support-box p{color:rgba(244,249,245,0.68);font-size:0.88rem;margin-bottom:0.5rem;}
+.iban-box{background:rgba(255,255,255,0.08);border:1px solid rgba(200,168,75,0.3);padding:0.65rem 1.3rem;margin:0.7rem auto;display:inline-block;font-family:monospace;font-size:0.88rem;color:var(--grano);letter-spacing:0.08em;}
+
+/* ADERENTI PAGE */
+.aderenti-stats-row{display:flex;gap:1.2rem;margin-bottom:2rem;flex-wrap:wrap;}
+.a-stat{background:#edf5f0;border:1px solid rgba(26,122,60,0.2);padding:0.9rem 1.3rem;}
+.a-stat .n{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--verde);display:block;}
+.a-stat .l{font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#5a8a6a;}
+.search-box{width:100%;padding:0.65rem 1rem;border:1px solid rgba(26,122,60,0.25);background:white;font-family:'Source Serif 4',serif;font-size:0.9rem;color:var(--testo);margin-bottom:1.2rem;outline:none;}
+.search-box:focus{border-color:var(--verde);}
+.aderenti-list{columns:3;column-gap:1.5rem;}
+.ente{font-size:0.8rem;color:#2d4a35;line-height:1.5;padding:0.22rem 0;border-bottom:1px solid rgba(26,122,60,0.07);break-inside:avoid;display:block;}
+.ente::before{content:'›';color:var(--verde-chiaro);margin-right:0.35rem;}
+.ente.hidden{display:none;}
+
+/* CONTATTI */
+.contatti-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem;margin-top:1.8rem;}
+.contatto-item{background:white;border:1px solid rgba(26,122,60,0.12);padding:1.3rem 1.8rem;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.c-label{font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.35rem;}
+.contatto-item a,.contatto-item span{color:var(--testo);text-decoration:none;font-size:0.92rem;}
+.contatto-item a:hover{color:var(--verde);}
+
+
+footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem;color:rgba(244,249,245,0.22);letter-spacing:0.08em;}
+
+/* MOBILE */
+@media(max-width:768px){
+  nav ul{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(13,31,20,0.99);flex-direction:column;padding:1rem;gap:0.3rem;border-bottom:1px solid rgba(200,168,75,0.2);}
+  nav ul.open{display:flex;}
+  .hamburger{display:flex;}
+  .chi-grid,.cosa-grid,.contatti-grid,.stampa-grid{grid-template-columns:1fr;}
+  .quick-links,.assi-strip{grid-template-columns:1fr 1fr;}
+  .numeri-grid{grid-template-columns:repeat(2,1fr);}
+  .countdown-inner{grid-template-columns:1fr;}
+  .countdown-poster{max-height:280px;}
+  .timeline::before{left:45px;}
+  .tl-anno{min-width:36px;font-size:0.78rem;}
+  .aderenti-list{columns:2;}
+}
+@media(max-width:480px){.aderenti-list{columns:1;}.quick-links{grid-template-columns:repeat(2,1fr);}.assi-strip{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" data-goto="home">
+image logo umanita     <span>Umanità Lodigiana</span>
+  </div>
+  <ul id="navMenu">
+    <li><a href="#" data-goto="home" data-page="home" class="active">Home</a></li>
+    <li><a href="#" data-goto="chi-siamo" data-page="chi-siamo">Chi siamo</a></li>
+    <li><a href="#" data-goto="storia" data-page="storia">Storia</a></li>
+    <li><a href="#" data-goto="aderenti" data-page="aderenti">Aderenti</a></li>
+    <li><a href="#" data-goto="contatti" data-page="contatti">Contatti</a></li>
+    <li><a href="#" data-goto="festa" data-page="festa" class="festa-link">🎉 Festa 2026</a></li>
+  </ul>
+  <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- ======= HOME ======= -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <div class="hero">
+image logo umanita     <p class="hero-anno">Rete attiva dal 2009 </p>
+    <h1><em><span id="typing-word">Umanità</span><span id="cursor">|</span></em><br>Lodigiana</h1>
+    <p class="hero-sub">Una rete di associazioni, comunità e cittadini che camminano insieme verso un territorio più giusto, accogliente e sostenibile.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="num">182</span><span class="label">Enti aderenti</span></div>
+      <div class="stat"><span class="num">5.000+</span><span class="label">Festa 2025</span></div>
+      <div class="stat"><span class="num">22</span><span class="label">Nazioni</span></div>
+      <div class="stat"><span class="num">16+</span><span class="label">Anni insieme</span></div>
+    </div>
+    <div class="hero-cta">
+      <a class="btn btn-grano" href="#" data-goto="festa">🎉 Festa dei Popoli 2026</a>
+      <a class="btn btn-outline" href="#" data-goto="chi-siamo">Scopri chi siamo</a>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <div class="quick-links" style="margin-top:2.5rem;width:100%;max-width:700px;animation:fadeUp 1s 0.9s ease both;">
+      <a class="ql-item" href="#" data-goto="chi-siamo"><span class="ql-icon">🌿</span><span class="ql-label">Chi siamo</span></a>
+      <a class="ql-item" href="#" data-goto="storia"><span class="ql-icon">📖</span><span class="ql-label">La nostra storia</span></a>
+      <a class="ql-item" href="#" data-goto="aderenti"><span class="ql-icon">🤝</span><span class="ql-label">Chi aderisce</span></a>
+      <a class="ql-item" href="#" data-goto="contatti"><span class="ql-icon">✉️</span><span class="ql-label">Contatti</span></a>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN FESTA BLOCK -->
+  <div class="countdown-section">
+    <div class="countdown-inner">
+      <div class="countdown-poster" style="display:flex;align-items:center;justify-content:center;background:#0f5228;padding:1rem;">
+ image 1
+      </div>
+      <div class="countdown-content">
+        
+        <span class="cd-label">Prossimo grande appuntamento</span>
+        <h2>Festa dei Popoli 2026</h2>
+        <div class="fdp-titolo">"Un cuore, tante voci"</div>
+        <div class="cd-date">23 Maggio 2026</div>
+        <div class="cd-place">📍 Parco Martiri della Libertà, Lodi</div>
+        <div class="countdown-timer" id="homeTimer">
+          <div class="ct-unit"><span class="ct-num" id="h-days">--</span><span class="ct-label">Giorni</span></div>
+          <div class="ct-unit"><span class="ct-num" id="h-hours">--</span><span class="ct-label">Ore</span></div>
+          <div class="ct-unit"><span class="ct-num" id="h-mins">--</span><span class="ct-label">Min</span></div>
+          <div class="ct-unit"><span class="ct-num" id="h-secs">--</span><span class="ct-label">Sec</span></div>
+        </div>
+        <div class="cd-tags">
+          <span class="cd-tag">Laboratori</span><span class="cd-tag">Musica</span><span class="cd-tag">Cibo dal mondo</span>
+          <span class="cd-tag">Calcio</span><span class="cd-tag">Spettacoli</span><span class="cd-tag">Giochi</span>
+        </div>
+        <p class="cd-desc">Inclusione · Voce alle donne · Diversità come ricchezza.<br>Una giornata intera di arte, culture, sapori e incontri tra 22 nazioni.</p>
+        <div class="cd-cta">
+          <a class="btn btn-grano" href="#" data-goto="festa">Scopri tutto →</a>
+          <a class="btn btn-outline" href="#" data-goto="contatti">Sostienici</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHI SIAMO ANTEPRIMA -->
+  <div class="home-block dark">
+    <div class="hb-container">
+      <span class="section-label gold">Chi siamo</span>
+      <h2 style="color:#f4f9f5;">Una rete nata dal basso</h2>
+      <p style="color:rgba(244,249,245,0.62);max-width:600px;">L'Umanità Lodigiana unisce dal 2009 associazioni, comunità straniere, cooperative, parrocchie e cittadini attorno a tre valori fondamentali. </p>
+      <div class="assi-strip">
+        <div class="asse-item"><span class="ai-icon">🤝</span><h3 style="color:var(--grano);">Integrazione</h3><p style="color:rgba(244,249,245,0.55);">Incontro tra comunità italiane e straniere del Lodigiano</p></div>
+        <div class="asse-item"><span class="ai-icon">🚲</span><h3 style="color:var(--grano);">Mobilità Lenta</h3><p style="color:rgba(244,249,245,0.55);">Ciclo-staffette che uniscono i borghi del territorio</p></div>
+        <div class="asse-item"><span class="ai-icon">☀️</span><h3 style="color:var(--grano);">Ambiente</h3><p style="color:rgba(244,249,245,0.55);">Comunità Energetiche Rinnovabili Solidali (CER)</p></div>
+      </div>
+      <div style="margin-top:1.5rem;"><a class="btn btn-outline" href="#" data-goto="chi-siamo">Leggi di più →</a></div>
+    </div>
+  </div>
+
+  <!-- NUMERI -->
+  <div class="home-block muted">
+    <div class="hb-container">
+      <span class="section-label">La forza della rete</span>
+      <h2>Sedici anni di storia comune</h2>
+      <div class="numeri-grid">
+        <div class="numero-item"><span class="n">5.000+</span><span class="l">Partecipanti Festa 2025</span></div>
+        <div class="numero-item"><span class="n">182</span><span class="l">Enti nella rete</span></div>
+        <div class="numero-item"><span class="n">22</span><span class="l">Nazioni alla Festa</span></div>
+        <div class="numero-item"><span class="n">7</span><span class="l">Grandi eventi</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHI ADERISCE ANTEPRIMA -->
+  <div class="home-block dark">
+    <div class="hb-container">
+      <span class="section-label gold">Chi aderisce</span>
+      <h2 style="color:#f4f9f5;">182 realtà del Lodigiano</h2>
+      <p style="color:rgba(244,249,245,0.6);">Associazioni di volontariato, cooperative sociali, comunità straniere, scuole, parrocchie, enti locali. Una rete aperta a tutti.</p>
+      <div class="aderenti-preview">
+        <span class="ente-chip">Caritas Lodigiana</span><span class="ente-chip">FIAB Ciclodi</span><span class="ente-chip">Legambiente</span><span class="ente-chip">ANPI Lodigiano</span><span class="ente-chip">Emergency Lodi</span><span class="ente-chip">Comunità Boliviana</span><span class="ente-chip">CSV Lombardia Sud</span><span class="ente-chip">Femmes Dynamiques</span><span class="ente-chip">Banca Etica</span><span class="ente-chip">CGIL Lodi</span><span class="ente-chip">Agesci Lodi</span><span class="ente-chip">Eagles of Lodi</span><span class="ente-chip">Gas Lodi</span><span class="ente-chip">Lodi Solidale</span><span class="ente-chip">+ 168 altri</span>
+      </div>
+      <div style="margin-top:1.5rem;"><a class="btn btn-outline" href="#" data-goto="aderenti">Vedi tutti gli aderenti →</a></div>
+    </div>
+  </div>
+
+  <!-- CITAZIONE -->
+  <div class="citazione-strip">
+    <blockquote>"L'unione di molti piccoli può avere tanta forza d'urto."</blockquote>
+    <cite>— Dalla storia di Umanità Lodigiana, Cinema Fanfulla, Lodi 2015</cite>
+  </div>
+
+  <!-- STAMPA -->
+  <div class="home-block light">
+    <div class="hb-container">
+      <span class="section-label">La stampa ne parla</span>
+      <h2>Cosa dicono di noi</h2>
+      <div class="stampa-grid">
+        <div class="stampa-item"><span class="src">Meic</span><p>"Festa dei popoli, la carica dei 5mila. Lodi si è dimostrata una città bella, accogliente e solidale."</p></div>
+        <div class="stampa-item"><span class="src">Il Giorno · giugno 2025</span><p>"Appello di Umanità Lodigiana: mobilizzatevi. L'evento che unisce il territorio."</p></div>
+        <div class="stampa-item"><span class="src">CSV Lombardia Sud</span><p>"Una rete che ha saputo unire enti e cittadini che condividono l'idea di una società multicolore e partecipata."</p></div>
+        <div class="stampa-item"><span class="src">Milano Etno TV</span><p>"Grazie al movimento carsico de l'Umanità Lodigiana — un evento che toccherà tutti i nostri sensi."</p></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© Umanità Lodigiana · Rete informale attiva dal 2009 · Lodi, Italia · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="137b667e727d7f7c777a53747e727a7f3d707c7e">[email&#160;protected]</a></footer>
+</div>
+
+<!-- ======= CHI SIAMO ======= -->
+<div class="page" id="page-chi-siamo">
+  <div class="page-header"><span class="ph-label">La rete</span><h1>Chi siamo</h1><p class="ph-sub">Un fazzoletto del lodigiana, tanta umanità condivisa dal 2009</p></div>
+  <div class="page-body">
+    <div class="chi-grid">
+      <div>
+        <span class="section-label">Le nostre radici</span>
+        <h2>Un'umanità che vive il Lodigiano</h2>
+        <p>L'Umanità Lodigiana non è stata creata. Vive il Lodigiano da quando ci riconosciamo nel nostro territorio: nei borghi antichi, nell'attività dei campi e nell'accoglienza esercitata nelle nostre case e nelle nostre terre.</p>
+        <p>Siamo una rete informale che dal 2009 unisce realtà diverse — associazioni di volontariato, cooperative sociali, comunità straniere, parrocchie, enti locali — con un unico filo: credere che insieme, anche i piccoli, abbiano una grande forza d'urto.</p>
+        <p>Crediamo che le crisi ambientale e sociale siano profondamente legate: affrontarle richiede unione, dialogo e impegno collettivo.</p>
+        <p>Parte del <strong>Festival Lodi di Pace</strong>, coordinato dal Comune di Lodi.</p>
+      </div>
+      <div>
+        <div class="decor-box"><p class="quote">"L'unione di molti piccoli può avere tanta forza d'urto."</p><p class="quote-attr">— Dalla storia di Umanità Lodigiana, 2015</p></div>
+        <div style="margin-top:1.3rem;background:#edf5f0;padding:1.1rem;border-left:3px solid var(--verde);"><p style="font-size:0.86rem;margin:0;color:var(--verde-scuro);"><strong>Parte del Festival Lodi di Pace</strong> — coordinato dal Comune di Lodi. La nostra rete è riconosciuta come partner culturale e sociale del territorio lodigiano.</p></div>
+      </div>
+    </div>
+    <div style="margin:2.5rem 0 1rem;">
+      <span class="section-label">I nostri tre assi</span>
+      <h2>Tre impegni, una direzione</h2>
+      <div class="assi-strip" style="border:1px solid rgba(26,122,60,0.12);">
+        <div class="asse-item"><span class="ai-icon">🤝</span><h3>Integrazione tra i Popoli</h3><p>Promuoviamo l'incontro tra le comunità straniere e italiana del Lodigiano. Organizziamo eventi, spettacoli e momenti di condivisione.</p></div>
+        <div class="asse-item"><span class="ai-icon">🚲</span><h3>Mobilità Lenta</h3><p>Con le Ciclo-staffette nel Lodigiano, riuniamo i territori valorizzando il paesaggio, l'acqua e le comunità locali. Con FIAB Lodi Ciclodi e Lodi Solidale.</p></div>
+        <div class="asse-item"><span class="ai-icon">☀️</span><h3>Comunità Energetiche</h3><p>Promuoviamo le Comunità Energetiche Rinnovabili Solidali (CER) per un futuro a zero emissioni nel Lodigiano.</p></div>
+      </div>
+    </div>
+    <div style="margin-top:2.5rem;">
+      <span class="section-label">La stampa ne parla</span>
+      <h2>Cosa dicono di noi</h2>
+      <div class="stampa-grid">
+        <div class="stampa-item"><span class="src">Meic </span><p>"Festa dei popoli, la carica dei 5mila. Lodi si è dimostrata una città bella, accogliente e solidale."</p></div>
+        <div class="stampa-item"><span class="src">Etno Tv</span><p>"Grazie al movimento carsico de l'Umanità Lodigiana, un evento che toccherà tutti i nostri sensi."</p></div>
+        <div class="stampa-item"><span class="src">Famiglia Nuova · 2025</span><p>"Ha permesso di riunire enti, associazioni e cittadini che condividono l'idea di una società multicolore e partecipata."</p></div>
+        <div class="stampa-item"><span class="src">CSV Lombardia Sud</span><p>"Tradizioni, danze, musiche e piatti tipici di 20 nazioni, laboratori creativi, momenti di riflessione."</p></div>
+      </div>
+    </div>
+  </div>
+  <footer>© Umanità Lodigiana · Rete informale attiva dal 2009 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8d0cdd5d9d6d4d7dcd1f8dfd5d9d1d496dbd7d5">[email&#160;protected]</a></footer>
+</div>
+
+<!-- ======= STORIA ======= -->
+<div class="page" id="page-storia">
+  <div class="page-header"><span class="ph-label">Dal 2009 ad oggi</span><h1>La nostra storia</h1><p class="ph-sub">Passi compiuti insieme: eventi, cammini, riflessioni e una rete che cresce ogni anno.</p></div>
+  <div class="page-body">
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-anno">2009</div><div class="tl-content"><h4>"Come un uomo sulla terra" — Cinema Moderno, Lodi</h4><p>Prima occasione di incontro: 25 enti, 250 persone. Il film di Andrea Segre e Dagmawi Yimer apre la strada. Qui nasce il germe della rete.</p><span class="tl-badge">250 persone · 25 enti</span></div></div>
+      <div class="tl-item"><div class="tl-anno">2015</div><div class="tl-content"><h4>"Io sto con la Sposa" — Cinema Fanfulla, Lodi</h4><p>43 associazioni, 750 persone. Nasce la bandiera della rete: l'acquarello di Mario Ottobelli. Qui si capisce che essere tanti insieme conta.</p><span class="tl-badge">750 persone · 43 enti</span></div></div>
+      <div class="tl-item"><div class="tl-anno">2017</div><div class="tl-content"><h4>Sit-in #iostocongabriele — Milano</h4><p>Gabriele Del Grande viene incarcerato in Turchia. Mobilitazione immediata: sit-in a Largo Cairoli con tutta Italia.</p></div></div>
+      <div class="tl-item"><div class="tl-anno">2018</div><div class="tl-content"><h4>"Quel Viaggio oltre – Dawla" — Cinema Fanfulla, Lodi</h4><p>52 associazioni, 650 persone. Musica, scrittura e recitazione si fondono. Buffet multiculturale con le comunità mediorientali e nordafricane.</p><span class="tl-badge">650 persone · 52 enti</span></div></div>
+      <div class="tl-item"><div class="tl-anno">2020</div><div class="tl-content"><h4>Ripartenza su tre assi — La pandemia non ci ferma</h4><p>Umanità Lodigiana riparte con tre cardini: Integrazione, Mobilità Lenta, Ambiente. Avvio CER e ciclo conferenze sull'ecologia integrale.</p></div></div>
+      <div class="tl-item"><div class="tl-anno">2021</div><div class="tl-content"><h4>Prima Ciclo-staffetta del Lodigiano · 10 ottobre</h4><p>6 tappe, 6 temi, 7 Comuni coinvolti. Con FIAB Lodi Ciclodi, Lodi Solidale e CSV Lombardia Sud. 125 enti e 93 persone nella rete.</p></div></div>
+      <div class="tl-item"><div class="tl-anno">2022</div><div class="tl-content"><h4>Seconda Ciclo-staffetta · Il tema dell'Acqua</h4><p>Comuni rivieraschi del MAB UNESCO Po Grande. Presentazione del libro "Il tempo e l'acqua" di Andri Snær Magnason.</p></div></div>
+      <div class="tl-item"><div class="tl-anno">2023</div><div class="tl-content"><h4>"Il Secolo Mobile – Liberi di partire, liberi di restare" · 15 aprile</h4><p>Cinema Fanfulla. 50 enti, 700 persone. Gabriele Del Grande e Mohammed Ba. Evento del programma Lodi di Pace.</p><span class="tl-badge">700 persone · 50 enti</span></div></div>
+      <div class="tl-item"><div class="tl-anno">2024</div><div class="tl-content"><h4>"Chi abiterà l'Italia dopo di noi" — Sala Rivolta · 21 giugno</h4><p>Fabrizio Gatti ospite. In autunno: "Cammini Diversi – Marcia della Pace" sul tema "La guerra non è un film".</p></div></div>
+      <div class="tl-item"><div class="tl-anno">2025</div><div class="tl-content"><h4>Festa dei Popoli — Parco Martiri della Libertà · 24 maggio</h4><p>73 enti, oltre 5.000 persone, 22 nazioni. Regia di Felicité Djiudjè e Danny Ismaila Wahab. La rete raggiunge 182 enti e 166 persone fisiche.</p><span class="tl-badge">5.000 persone · 73 enti · 22 nazioni</span></div></div>
+      <div class="tl-item"><div class="tl-anno">2026</div><div class="tl-content"><h4>Festa dei Popoli 2026 · 23 maggio — In arrivo!</h4><p>Tema: "Un cuore, tante voci". Parte del Festival Lodi di Pace, coordinato dal Comune di Lodi.</p><a href="#" data-goto="festa" style="display:inline-block;margin-top:0.5rem;padding:0.35rem 0.9rem;background:var(--verde);color:white;font-size:0.75rem;text-decoration:none;letter-spacing:0.08em;text-transform:uppercase;">Scopri la Festa 2026 →</a></div></div>
+    </div>
+  </div>
+  <footer>© Umanità Lodigiana · Rete informale attiva dal 2009 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="84ecf1e9e5eae8ebe0edc4e3e9e5ede8aae7ebe9">[email&#160;protected]</a></footer>
+</div>
+
+<!-- ======= FESTA 2026 ======= -->
+<div class="page" id="page-festa">
+  <div class="festa-hero-page">
+    <span style="font-size:0.66rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(200,168,75,0.75);display:block;margin-bottom:0.5rem;">Prossimo appuntamento</span>
+    <h1>Festa dei Popoli 2026</h1>
+    <div class="fdp-titolo">"Un cuore, tante voci"</div>
+    <div class="fdp-date">23 Maggio 2026</div>
+    <div class="fdp-place">📍 Parco Martiri della Libertà, Lodi</div>
+    
+    <!-- LODI DI PACE BADGE -->
+    <div style="display:inline-flex;align-items:center;gap:1.5rem;margin-top:1.5rem;background:rgba(255,255,255,0.07);border:1px solid rgba(200,168,75,0.25);padding:1rem 2rem;position:relative;z-index:1;flex-wrap:wrap;justify-content:center;">
+image 1       <div style="text-align:left;">
+        <div style="font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(200,168,75,0.65);margin-bottom:0.2rem;">Parte della rassegna</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:white;letter-spacing:0.04em;line-height:1.2;">Festival Lodi di Pace</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:0.2rem;">coordinato dal Comune di Lodi · dal 1454</div>
+      </div>
+    </div>
+
+    <div class="fdp-timer">
+      <div class="ct-unit"><span class="ct-num" id="f-days">--</span><span class="ct-label">Giorni</span></div>
+      <div class="ct-unit"><span class="ct-num" id="f-hours">--</span><span class="ct-label">Ore</span></div>
+      <div class="ct-unit"><span class="ct-num" id="f-mins">--</span><span class="ct-label">Min</span></div>
+      <div class="ct-unit"><span class="ct-num" id="f-secs">--</span><span class="ct-label">Sec</span></div>
+    </div>
+  </div>
+
+  <!-- VOLANTINO + INFO -->
+  <div style="background:var(--verde-scuro);">
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;max-width:960px;margin:0 auto;">
+image here
+      <div style="padding:2.5rem 2rem;display:flex;flex-direction:column;justify-content:center;">
+        <span class="section-label gold">Il tema del 2026</span>
+        <h2 style="color:white;">Inclusione · Voce alle donne · Diversità come ricchezza</h2>
+        <p style="color:rgba(244,249,245,0.68);">Una giornata intera di culture, sapori, musiche e incontri tra comunità di 22 nazioni. La Festa è pensata e organizzata dalle stesse comunità straniere del Lodigiano, a cui è affidata la regia artistica.</p>
+        <div class="cd-tags" style="margin:1rem 0;">
+          <span class="cd-tag">Laboratori</span><span class="cd-tag">Calcio</span><span class="cd-tag">Cibo dal mondo</span>
+          <span class="cd-tag">Musica</span><span class="cd-tag">Spettacoli</span><span class="cd-tag">Giochi</span>
+        </div>
+        <div style="display:flex;gap:0.7rem;flex-wrap:wrap;">
+          <a class="btn btn-grano" href="#" data-goto="contatti">Sostieni la festa</a>
+          <a class="btn btn-outline" href="https://www.facebook.com/umanita.lodigiana/" target="_blank">Seguici su Facebook</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <!-- COSA ASPETTARSI -->
+    <span class="section-label">Cosa aspettarsi</span>
+    <h2>Una giornata da vivere</h2>
+    <div class="cosa-grid">
+      <div class="cosa-item"><span class="icon">🎭</span><h4>Spettacoli</h4><p>Regia affidata alle comunità straniere. Musica, danza e teatro dal vivo tutto il giorno.</p></div>
+      <div class="cosa-item"><span class="icon">🍽️</span><h4>Cibo dal Mondo</h4><p>Laboratori gastronomici con 15 comunità: sapori autentici di 22 nazioni in un unico parco.</p></div>
+      <div class="cosa-item"><span class="icon">⚽</span><h4>Torneo di Calcio</h4><p>Squadre formate dalle comunità: lo sport come linguaggio universale di incontro.</p></div>
+      <div class="cosa-item"><span class="icon">🎨</span><h4>Laboratori creativi</h4><p>Workshop per adulti e bambini: artigianato, arte e tradizioni da tutto il mondo.</p></div>
+      <div class="cosa-item"><span class="icon">💬</span><h4>Riflessioni</h4><p>Momenti di confronto su pace, ambiente e diritti. Con esperti, comunità e istituzioni locali.</p></div>
+      <div class="cosa-item"><span class="icon">🌍</span><h4>22 Nazioni</h4><p>Comunità italiane e straniere che vivono nel Lodigiano: protagoniste, non ospiti.</p></div>
+    </div>
+
+    <!-- L'EDIZIONE 2025 -->
+    <div style="margin-top:3rem;">
+      <span class="section-label">L'edizione precedente</span>
+      <h2>La Festa dei Popoli 2025 in numeri</h2>
+      <div class="numeri-grid" style="margin-top:1rem;">
+        <div class="numero-item"><span class="n">5.000+</span><span class="l">Partecipanti</span></div>
+        <div class="numero-item"><span class="n">72</span><span class="l">Associazioni</span></div>
+        <div class="numero-item"><span class="n">22</span><span class="l">Nazioni</span></div>
+        <div class="numero-item"><span class="n">2</span><span class="l">Sedi</span></div>
+      </div>
+    </div>
+
+    <!-- BUDGET -->
+
+    <!-- MULTICULTURALISMO SECTION -->
+    <div style="background:var(--notte);padding:3rem 2rem;margin:0 -2rem 3rem;text-align:center;">
+      <div style="max-width:780px;margin:0 auto;">
+        <span class="section-label gold">Perché è importante</span>
+        <h2 style="color:#f4f9f5;margin-bottom:1.5rem;">La diversità è una ricchezza, non un problema</h2>
+        <p style="color:rgba(244,249,245,0.65);font-size:1rem;line-height:1.9;">Nel Lodigiano vivono, lavorano e contribuiscono ogni giorno persone provenienti da oltre 22 nazioni. Non sono ospiti temporanei: sono parte di questa comunità, con storie, culture, saperi e tradizioni che arricchiscono il territorio.</p>
+        <p style="color:rgba(244,249,245,0.65);font-size:1rem;line-height:1.9;">La Festa dei Popoli nasce da una convinzione semplice e radicale: <strong style="color:var(--grano);">quando ci si conosce, la paura diminuisce e la fiducia cresce.</strong> Non basta tollerarsi — bisogna incontrarsi, mangiare insieme, ballare insieme, giocare insieme.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.06);margin-top:2.5rem;">
+          <div style="background:rgba(255,255,255,0.04);padding:1.8rem 1.2rem;">
+            <div style="font-size:2rem;margin-bottom:0.6rem;">🌍</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--grano);margin-bottom:0.5rem;">Conoscersi</div>
+            <p style="font-size:0.83rem;color:rgba(244,249,245,0.5);line-height:1.6;margin:0;">Creare occasioni reali di incontro tra comunità che vivono spesso in parallelo senza mai davvero incrociarsi.</p>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);padding:1.8rem 1.2rem;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:2rem;margin-bottom:0.6rem;">🎤</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--grano);margin-bottom:0.5rem;">Dare voce</div>
+            <p style="font-size:0.83rem;color:rgba(244,249,245,0.5);line-height:1.6;margin:0;">Le comunità straniere non sono semplici partecipanti: sono registe, organizzatrici, protagoniste assolute della giornata.</p>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);padding:1.8rem 1.2rem;">
+            <div style="font-size:2rem;margin-bottom:0.6rem;">🤲</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--grano);margin-bottom:0.5rem;">Costruire insieme</div>
+            <p style="font-size:0.83rem;color:rgba(244,249,245,0.5);line-height:1.6;margin:0;">Un territorio coeso è più forte: l'inclusione non è solo un valore morale, è una scelta strategica per il benessere di tutti.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOSTENITORI SECTION -->
+    <div style="margin-top:1rem;">
+      <span class="section-label">Con il sostegno di</span>
+      <h2>I nostri sostenitori</h2>
+      <p>La Festa dei Popoli è resa possibile grazie al contributo di tante realtà del territorio lodigiano e non solo — associazioni, enti, imprese e privati che credono in un Lodigiano più giusto e accogliente. Un grande grazie a tutti!</p>
+
+      <!-- SOSTENITORI ECONOMICI -->
+      <div style="margin-top:2rem;">
+        <span style="font-size:0.62rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:1.2rem;">💛 Sostenitori economici</span>
+        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;justify-content:flex-start;">
+          <div style="background:white;border:1px solid #e8ede9;border-radius:8px;padding:1rem 1.2rem;display:flex;align-items:center;justify-content:center;flex:1 1 120px;max-width:160px;min-height:100px;box-sizing:border-box;">
+image here 
+         </div>
+          <div style="background:white;border:1px solid #e8ede9;border-radius:8px;padding:1rem 1.2rem;display:flex;align-items:center;justify-content:center;flex:1 1 180px;max-width:260px;min-height:100px;box-sizing:border-box;">
+image here          </div>
+          <div style="background:white;border:1px solid #e8ede9;border-radius:8px;padding:1rem 1.2rem;display:flex;align-items:center;justify-content:center;flex:1 1 130px;max-width:180px;min-height:100px;box-sizing:border-box;">
+image here          </div>
+          <div style="background:white;border:1px solid #e8ede9;border-radius:8px;padding:1rem 1.2rem;display:flex;align-items:center;justify-content:center;flex:1 1 110px;max-width:150px;min-height:100px;box-sizing:border-box;">
+image here        
+  </div>
+        </div>
+      </div>
+
+      <!-- MEDIA PARTNER -->
+      <div style="margin-top:2rem;">
+        <span style="font-size:0.62rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:1.2rem;">📡 Media partner</span>
+        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;justify-content:flex-start;">
+          <div style="background:white;border:1px solid #e8ede9;border-radius:8px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:center;flex:1 1 130px;max-width:180px;min-height:90px;box-sizing:border-box;">
+image here    cittadino       </div>
+          <div style="background:white;border:1px solid #e8ede9;border-radius:8px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:center;flex:1 1 170px;max-width:240px;min-height:90px;box-sizing:border-box;">
+image here       etno tv   </div>
+        </div>
+      </div>
+
+      <p style="font-size:0.78rem;color:#5a8a6a;margin-top:1.5rem;font-style:italic;">Vuoi comparire qui? <a href="#" data-goto="contatti" style="color:var(--verde);">Contattaci per le opzioni di partnership →</a></p>
+    </div>
+
+    <div style="margin-top:3rem;">
+      <span class="section-label">Trasparenza</span>
+      <h2>Budget previsionale 2026</h2>
+      <table class="budget-table">
+        <tr><td>Comunicazione (produzione audio – video Etno TV, fotografi e materiale di comunicazione)</td><td>€ 1.000</td></tr>
+        <tr><td>DJ, presentatore palco e messa in scena</td><td>€ 800</td></tr>
+        <tr><td>Contributi a comunità straniere per messa in scena e supporto laboratori gastronomici e cucina (15 comunità a 300€ cad)</td><td>€ 4.500</td></tr>
+        <tr><td>Coreografie costumi e materiale scenico</td><td>€ 500</td></tr>
+        <tr><td>Audio Media service</td><td>€ 1.000</td></tr>
+        <tr><td>Torneo Calcio attività ludiche e materiale di consumo</td><td>€ 1.500</td></tr>
+        <tr><td>Contributo per fornitura bicchieri piatti posate… materiali di consumo</td><td>€ 1.000</td></tr>
+        <tr><td>Concerto di chiusura</td><td>€ 2.000</td></tr>
+        <tr><td><strong>Sub totale</strong></td><td><strong>€ 12.300</strong></td></tr>
+        <tr><td>Imprevisti (10%)</td><td>€ 1.200</td></tr>
+        <tr><td><strong>TOTALE PREVISIONE DI SPESA FESTA DEI POPOLI 2026</strong></td><td><strong>€ 13.500</strong></td></tr>
+      </table>
+    </div>
+
+
+
+   
+
+
+    <!-- PERCHE LA DIVERSITA CONTA -->
+    <div style="margin-top:3rem;padding:2.5rem;background:#edf5f0;border-left:4px solid var(--verde);">
+      <span style="font-size:0.66rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.6rem;">La nostra visione</span>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.5rem,3vw,2.2rem);color:var(--notte);margin-bottom:1.2rem;">Perché il multiculturalismo è una ricchezza</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+        <div>
+          <p style="color:#2d4a35;">Il Lodigiano è un territorio che da decenni accoglie persone da ogni parte del mondo. Queste comunità non sono ospiti di passaggio: lavorano, crescono i loro figli, costruiscono il futuro di questa terra insieme a noi.</p>
+          <p style="color:#2d4a35;">Celebrare la diversità non significa ignorare le differenze. Significa riconoscere che ogni cultura porta con sé saperi, tradizioni e visioni del mondo che arricchiscono tutti. La Festa dei Popoli è il momento in cui questo diventa visibile, tangibile, festoso.</p>
+        </div>
+        <div>
+          <p style="color:#2d4a35;">Una società coesa non è una società uniforme. È una società che sa trovare punti di contatto pur nella propria pluralità — che sa trasformare la convivenza in incontro, e l'incontro in comunità.</p>
+          <p style="color:#2d4a35;">Per questo dal 2009 Umanità Lodigiana lavora per costruire ponti: tra associazioni, tra comunità, tra generazioni. La Festa dei Popoli è il risultato più visibile di questo lavoro quotidiano — ma la rete vive tutto l'anno.</p>
+        </div>
+      </div>
+    </div>
+
+        <div class="support-box">
+      <h3>Sostieni la Festa dei Popoli 2026</h3>
+      <p>Chiediamo il tuo contributo come investimento nel benessere della comunità lodigiana.</p>
+      <p>Donazione tramite <strong style="color:var(--grano);">Fondazione Comunitaria della Provincia di Lodi</strong></p>
+      <div class="iban-box">IT70U0832420301000000018127</div>
+      <p>Causale: <em>"Fondo Umanità Lodigiana"</em></p>
+      <p style="margin-top:0.5rem;">oppure scrivici a <a href="/cdn-cgi/l/email-protection#c3abb6aea2adafaca7aa83a4aea2aaafeda0acae" style="color:var(--grano);"><span class="__cf_email__" data-cfemail="f29a879f939c9e9d969bb2959f939b9edc919d9f">[email&#160;protected]</span></a></p>
+    </div>
+  </div>
+  <footer>© Umanità Lodigiana · Rete informale attiva dal 2009 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="670f120a06090b08030e27000a060e0b4904080a">[email&#160;protected]</a></footer>
+</div>
+
+<!-- ======= ADERENTI ======= -->
+<div class="page" id="page-aderenti">
+  <div class="page-header"><span class="ph-label">La rete</span><h1>Chi aderisce</h1><p class="ph-sub">182 enti e 166 persone fisiche che credono in un Lodigiano più giusto e accogliente</p></div>
+  <div class="page-body">
+    <div class="aderenti-stats-row">
+      <div class="a-stat"><span class="n">182</span><span class="l">Enti aderenti</span></div>
+      <div class="a-stat"><span class="n">166</span><span class="l">Persone fisiche</span></div>
+      <div class="a-stat"><span class="n">22</span><span class="l">Nazioni</span></div>
+      <div class="a-stat"><span class="n">2009</span><span class="l">Anno di inizio</span></div>
+    </div>
+
+    <!-- CERCA PER BISOGNO -->
+    <div style="background:var(--notte);border-radius:8px;padding:2rem;margin-bottom:2rem;">
+      <span style="font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--grano);display:block;margin-bottom:0.6rem;">Trova soluzioni</span>
+      <h3 style="color:#f4f9f5;font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:1.2rem;">Di cosa hai bisogno?</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:0.7rem;" id="bisognoBtns">
+        <button class="bisogno-btn active" data-bisogno="tutti" onclick="filterPerBisogno('tutti')">🌐 Tutti</button>
+        <button class="bisogno-btn" data-bisogno="aiuto" onclick="filterPerBisogno('aiuto')">🤝 Aiuto sociale</button>
+        <button class="bisogno-btn" data-bisogno="cultura" onclick="filterPerBisogno('cultura')">🎭 Cultura</button>
+        <button class="bisogno-btn" data-bisogno="ambiente" onclick="filterPerBisogno('ambiente')">🌱 Ambiente</button>
+        <button class="bisogno-btn" data-bisogno="giovani" onclick="filterPerBisogno('giovani')">🎒 Giovani & scuola</button>
+        <button class="bisogno-btn" data-bisogno="lavoro" onclick="filterPerBisogno('lavoro')">💼 Lavoro</button>
+        <button class="bisogno-btn" data-bisogno="comunita" onclick="filterPerBisogno('comunita')">🌍 Comunità straniere</button>
+        <button class="bisogno-btn" data-bisogno="spirituale" onclick="filterPerBisogno('spirituale')">✝ Spirituale</button>
+        <button class="bisogno-btn" data-bisogno="cooperativa" onclick="filterPerBisogno('cooperativa')">🏢 Cooperative</button>
+      </div>
+      <div style="margin-top:0.8rem;font-size:0.75rem;color:rgba(244,249,245,0.4);"><span id="filtroCount">Tutti gli enti</span></div>
+    </div>
+
+    <input class="search-box" type="text" placeholder="Cerca per nome..." oninput="filterEnti(this.value)" id="searchBox">
+    <div class="aderenti-list" id="entiList">
+      <span class="ente" data-cat="comunita">ACAL Associazione dei Camerunensi della Lombardia</span>
+      <span class="ente" data-cat="cultura">Accademia Gerundia</span>
+      <span class="ente" data-cat="cooperativa">ACSI Sai 1181 (Famiglia Nuova)</span>
+      <span class="ente" data-cat="cooperativa">ACSI SAI 530 (Eureka!)</span>
+      <span class="ente" data-cat="giovani">Agesci CODOGNO</span>
+      <span class="ente" data-cat="giovani">Agesci Lodi 1</span>
+      <span class="ente" data-cat="giovani">Agesci Lodi 2</span>
+      <span class="ente" data-cat="giovani">Agesci NORD LODIGIANO 1</span>
+      <span class="ente" data-cat="giovani">Agesci Sant'Angelo Lodigiano</span>
+      <span class="ente" data-cat="comunita">Al Rahma</span>
+      <span class="ente" data-cat="aiuto">Amici di Serena</span>
+      <span class="ente" data-cat="cultura">Amicizia Italia Cuba di Lodi</span>
+      <span class="ente" data-cat="ambiente">APSE Italia (Ambiente, Pace, Solidarietà ed Economia)</span>
+      <span class="ente" data-cat="cooperativa">Area Soci Coop Lodi Tavazzano</span>
+      <span class="ente" data-cat="cultura">Argine</span>
+      <span class="ente" data-cat="aiuto">Avvocato di strada Lodi</span>
+      <span class="ente" data-cat="aiuto">Azienda Speciale Consortile Servizi Intercomunali - Prog. SAI MSNA</span>
+      <span class="ente" data-cat="spirituale">Azione Cattolica Lodigiana</span>
+      <span class="ente" data-cat="lavoro">Banca del tempo di Tavazzano</span>
+      <span class="ente" data-cat="lavoro">Banca Etica soci del Lodigiano</span>
+      <span class="ente" data-cat="cultura">Bar Atypical Lodi</span>
+      <span class="ente" data-cat="lavoro">Camera del Lavoro territoriale CGIL</span>
+      <span class="ente" data-cat="aiuto">Caritas Casa di accoglienza Regina Pacis</span>
+      <span class="ente" data-cat="aiuto">Caritas Lodigiana</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Balbiano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Bertonico</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Brembio</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Cabrini Lodi</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Casalpusterlengo</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Caselle Landi</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Castelgerundo (Cavacurta; Camairago)</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Castelnuovo Bocca d'Adda; Maccastorna; Meleti</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Castiglione d'Adda</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Cavenago d'Adda, Caviaga</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Cervignano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Codogno S.Biagio</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Codogno S.Giovanni Bosco</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Codogno Santa F Cabrini</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Cornegliano Laudense</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Corno Giovine; CornoVecchio</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Dresano</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Fombio</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Gradella; Nosadello</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Graffignana</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Guardamiglio; Valloria</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Lodi - Ausiliatrice</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodi - S. Bernardo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodi - S. Maria Assunta</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Lodi - San Fereolo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodi - San Gualtero</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Lodi - San Lorenzo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodi - Sant' Alberto Vescovo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodi - Santa Cabrini</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodi - Santa Maria Addolorata</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Lodivecchio</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Mairano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Maleo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Merlino e Marzano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Miradolo Terme; Camporinaldo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Orio Litta</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Paullo</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Pieve Fissiraga</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Postino, Dovera, Roncadello, Crespiatica Tormo</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Salerano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale San Colombano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale San Fiorano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale San Martino in Strada</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale San Rocco al Porto; Mezzana Casati</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Sant'Angelo Lod.-Antonio Abate</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Santo Stefano Lodigiano</span>
+      <span class="ente" data-cat="aiuto">Caritas Parrocchiale Senna Lodigiana</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Somaglia San Martino Pizzolano</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Tavazzano con Villavesco</span>
+      <span class="ente" data-cat="aiuto">Caritas parrocchiale Turano Melegnanello</span>
+      <span class="ente" data-cat="comunita">Casa della Comunità ETS Fondazione di Partecipazione</span>
+      <span class="ente" data-cat="aiuto">Centro Aiuto alla Vita Lodi</span>
+      <span class="ente" data-cat="spirituale">Centro Missionario Diocesano – Lodi</span>
+      <span class="ente" data-cat="aiuto">Cestis</span>
+      <span class="ente" data-cat="cultura">Cinema Fanfulla</span>
+      <span class="ente" data-cat="cultura">Cinema Moderno</span>
+      <span class="ente" data-cat="cultura">Circolo Acli di Sant'Angelo Lodigiano</span>
+      <span class="ente" data-cat="ambiente">Circolo del Porro</span>
+      <span class="ente" data-cat="cultura">CMD Production</span>
+      <span class="ente" data-cat="aiuto">Coach di Quartiere</span>
+      <span class="ente" data-cat="comunita">Cocoti</span>
+      <span class="ente" data-cat="istituzione">CODOGNO</span>
+      <span class="ente" data-cat="ambiente">Comitato dei Cittadini di Tavazzano, Ambiente Salute, Partecipazione</span>
+      <span class="ente" data-cat="istituzione">Comune Castelnuovo B. d'Adda</span>
+      <span class="ente" data-cat="istituzione">Comune Corno Giovine</span>
+      <span class="ente" data-cat="istituzione">Comune di Caselle Landi</span>
+      <span class="ente" data-cat="istituzione">Comune di Lodi</span>
+      <span class="ente" data-cat="istituzione">Comune di Santo Stefano Lodigiana</span>
+      <span class="ente" data-cat="istituzione">Comune Maccastorna</span>
+      <span class="ente" data-cat="comunita">Comunità Boliviana</span>
+      <span class="ente" data-cat="comunita">Comunità Castenuovo Bocca d'Adda</span>
+      <span class="ente" data-cat="comunita">Comunità del Mali a Lodi</span>
+      <span class="ente" data-cat="comunita">Comunità del Togo a Lodi</span>
+      <span class="ente" data-cat="comunita">Comunità Ecuador con Pierre</span>
+      <span class="ente" data-cat="comunita">Comunità Ecuadoriana Lodi</span>
+      <span class="ente" data-cat="comunita">Comunità Egitto con Pierre</span>
+      <span class="ente" data-cat="comunita">Comunità Eritrea</span>
+      <span class="ente" data-cat="comunita">Comunità India con Pierre</span>
+      <span class="ente" data-cat="comunita">Comunità indiana viale Milano</span>
+      <span class="ente" data-cat="spirituale">Comunità Laudato Sì Corno Giovine</span>
+      <span class="ente" data-cat="spirituale">Comunità Laudato Sì Miradolo Terme</span>
+      <span class="ente" data-cat="comunita">Comunità Marocco con Pierre</span>
+      <span class="ente" data-cat="comunita">Comunità Romania con Pierre</span>
+      <span class="ente" data-cat="comunita">Comunità senegalese a Lodi</span>
+      <span class="ente" data-cat="comunita">Comunità Sudan con Pierre</span>
+      <span class="ente" data-cat="comunita">Comunità Tunisina con Pierre</span>
+      <span class="ente" data-cat="cooperativa">Coop Le Pleiadi</span>
+      <span class="ente" data-cat="cooperativa">Coop Mamida Santo Stefano lod.</span>
+      <span class="ente" data-cat="cooperativa">Cooperativa Nord Sud</span>
+      <span class="ente" data-cat="giovani">Coordinamento Genitori Democratici</span>
+      <span class="ente" data-cat="cultura">Coordinamento Lodi per la Palestina</span>
+      <span class="ente" data-cat="giovani">CPIA Lodi</span>
+      <span class="ente" data-cat="aiuto">CSV Lombardia Sud</span>
+      <span class="ente" data-cat="cultura">Delle Aie Castelnuovo B.d'Adda</span>
+      <span class="ente" data-cat="comunita">Donne Sorelle Mame Diarra</span>
+      <span class="ente" data-cat="cultura">Eagles of Lodi</span>
+      <span class="ente" data-cat="aiuto">Effathà Laus- ODV</span>
+      <span class="ente" data-cat="comunita">El Cisne</span>
+      <span class="ente" data-cat="aiuto">Emergency Lodi</span>
+      <span class="ente" data-cat="cooperativa">Famiglia Nuova</span>
+      <span class="ente" data-cat="comunita">Femmes Dynamiques de Lodi</span>
+      <span class="ente" data-cat="cultura">Fest</span>
+      <span class="ente" data-cat="ambiente">FIAB Casalpusterlengo</span>
+      <span class="ente" data-cat="ambiente">Fiab Lodi Ciclodi</span>
+      <span class="ente" data-cat="lavoro">Fondazione Banca Popolare Lodi</span>
+      <span class="ente" data-cat="lavoro">Fondazione Comunitaria provincia di Lodi</span>
+      <span class="ente" data-cat="cultura">Fondazione Giorgio Gaber</span>
+      <span class="ente" data-cat="aiuto">Fratelli Sea OdV</span>
+      <span class="ente" data-cat="giovani">FUCI Lodi</span>
+      <span class="ente" data-cat="aiuto">Futura Lodi</span>
+      <span class="ente" data-cat="ambiente">Gap Gruppo di acquisto Popolare Lodigiano</span>
+      <span class="ente" data-cat="ambiente">Gas basso lodigiano</span>
+      <span class="ente" data-cat="ambiente">Gas Lodi</span>
+      <span class="ente" data-cat="cultura">GEA Equipe</span>
+      <span class="ente" data-cat="cultura">Good Food Restaurant</span>
+      <span class="ente" data-cat="ambiente">Gruppo Green LV</span>
+      <span class="ente" data-cat="spirituale">Gruppo missionario Cabrini Lodi</span>
+      <span class="ente" data-cat="giovani">IC F. Cazzulani Lodi</span>
+      <span class="ente" data-cat="giovani">IC Lodi 1 (infanzia)</span>
+      <span class="ente" data-cat="giovani">IC Lodi 1 (media)</span>
+      <span class="ente" data-cat="giovani">IC Lodi 1 (primaria)</span>
+      <span class="ente" data-cat="cultura">Il Cittadino Lodi</span>
+      <span class="ente" data-cat="cultura">Il Cortile APS</span>
+      <span class="ente" data-cat="aiuto">Il Mosaico Servizi ETS</span>
+      <span class="ente" data-cat="cooperativa">Il Pellicano Comunità</span>
+      <span class="ente" data-cat="cultura">Il Picchio di Sherwood</span>
+      <span class="ente" data-cat="aiuto">Il Ramo</span>
+      <span class="ente" data-cat="aiuto">Interazioni SCS</span>
+      <span class="ente" data-cat="giovani">Istituto Liceo Artistico Piazza</span>
+      <span class="ente" data-cat="giovani">Istituto Maffeo Vegio</span>
+      <span class="ente" data-cat="giovani">Istituto Merli Villa Igea</span>
+      <span class="ente" data-cat="ambiente">Italia Nostra Lodi</span>
+      <span class="ente" data-cat="comunita">La mia Africa</span>
+      <span class="ente" data-cat="cultura">La tela del Ragno APS</span>
+      <span class="ente" data-cat="comunita">Lazos Ecuatorianos</span>
+      <span class="ente" data-cat="ambiente">Legambiente</span>
+      <span class="ente" data-cat="cultura">Libreria Sommaruga</span>
+      <span class="ente" data-cat="aiuto">Lodi Comune Solidale</span>
+      <span class="ente" data-cat="giovani">Lodi Skate ASD</span>
+      <span class="ente" data-cat="aiuto">Lodi Solidale</span>
+      <span class="ente" data-cat="istituzione">LODIVECCHIO</span>
+      <span class="ente" data-cat="aiuto">Loscarcere</span>
+      <span class="ente" data-cat="aiuto">Mac Lodi</span>
+      <span class="ente" data-cat="giovani">Marciatori di Vaiano</span>
+      <span class="ente" data-cat="cultura">Maschile Plurale</span>
+      <span class="ente" data-cat="giovani">MASCI Lodi1</span>
+      <span class="ente" data-cat="giovani">Masci Lodi2</span>
+      <span class="ente" data-cat="spirituale">MEIC Lodi</span>
+      <span class="ente" data-cat="cooperativa">Mémosis Soc. Coop. Impresa sociale</span>
+      <span class="ente" data-cat="spirituale">Migrantes Lodi</span>
+      <span class="ente" data-cat="cultura">Milano Etno TV</span>
+      <span class="ente" data-cat="spirituale">Missione Cabriniana Oggi</span>
+      <span class="ente" data-cat="comunita">MLFM</span>
+      <span class="ente" data-cat="spirituale">Movimento dei Focolari</span>
+      <span class="ente" data-cat="lavoro">Movimento federalista europeo sez lodi</span>
+      <span class="ente" data-cat="cultura">Nel Tempo Rete Informale Guardamiglio</span>
+      <span class="ente" data-cat="comunita">Nourou Darayni Lodi e Provincia Ass.</span>
+      <span class="ente" data-cat="comunita">Nuovo Mondo ass.</span>
+      <span class="ente" data-cat="spirituale">Parrocchia di Castelnuovo Meleti Maccastorna</span>
+      <span class="ente" data-cat="spirituale">Parrocchia di Spino D'adda</span>
+      <span class="ente" data-cat="aiuto">Patto ODV</span>
+      <span class="ente" data-cat="aiuto">Pierre lotta Esclusione Sociale</span>
+      <span class="ente" data-cat="cultura">Pro-Loco Lodi</span>
+      <span class="ente" data-cat="cultura">Progetto Immagine</span>
+      <span class="ente" data-cat="cultura">Progetto pretesto ODV</span>
+      <span class="ente" data-cat="cultura">Radio Gabbio</span>
+      <span class="ente" data-cat="lavoro">Realizziamo il cambiamento</span>
+      <span class="ente" data-cat="lavoro">Rete Azione Partecipare UDP</span>
+      <span class="ente" data-cat="comunita">Ristorante Asmara</span>
+      <span class="ente" data-cat="comunita">Ruana</span>
+      <span class="ente" data-cat="cooperativa">Sai 1181 dell'Acsi</span>
+      <span class="ente" data-cat="aiuto">SAI Comune di Lodi - Progetto Insieme ODV</span>
+      <span class="ente" data-cat="ambiente">Sal Acqua Lodigiana</span>
+      <span class="ente" data-cat="comunita">Samovilas</span>
+      <span class="ente" data-cat="giovani">Scuole Diocesane</span>
+      <span class="ente" data-cat="ambiente">Sea Shepherd</span>
+      <span class="ente" data-cat="cultura">Selvagreca Compagnia Teatrale</span>
+      <span class="ente" data-cat="aiuto">Soroptimist International Club Lodi</span>
+      <span class="ente" data-cat="ambiente">Stati Generali dell'ambiente</span>
+      <span class="ente" data-cat="giovani">Taiji-To ASD</span>
+      <span class="ente" data-cat="ambiente">Terra del Sole</span>
+      <span class="ente" data-cat="ambiente">Terradice APS</span>
+      <span class="ente" data-cat="cultura">Towanda</span>
+      <span class="ente" data-cat="comunita">Tunisina Lodi e Provincia Ass.</span>
+      <span class="ente" data-cat="aiuto">Tutto il mondo</span>
+      <span class="ente" data-cat="giovani">UCIIM - Unione Cattolica Italiana insegnanti, dirigenti, educatori e formatori</span>
+      <span class="ente" data-cat="aiuto">UICI unione italiana ciechi e ipovedenti ETS</span>
+      <span class="ente" data-cat="aiuto">Una luce per la pace - Psicopolis</span>
+      <span class="ente" data-cat="cultura">Unitre Lodi</span>
+      <span class="ente" data-cat="aiuto">UnPoNostro</span>
+      <span class="ente" data-cat="ambiente">Vivambiente</span>
+      <span class="ente" data-cat="ambiente">WWF Lodigiano</span>
+      <span class="ente" data-cat="cultura">X-23</span>
+      <span class="ente" data-cat="giovani">Yogam</span>
+
+    </div>
+    <p id="noResults" style="display:none;color:#5a8a6a;margin-top:1rem;font-style:italic;">Nessun risultato trovato.</p>
+    <p style="color:#5a8a6a;font-size:0.78rem;margin-top:1.5rem;font-style:italic;">Vuoi unire la tua realtà alla rete? <a href="#" data-goto="contatti" style="color:var(--verde);">Contattaci →</a></p>
+
+    
+
+  </div>
+  <footer>© Umanità Lodigiana · Rete informale attiva dal 2009 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fc95929a93bc89919d9295889d909398959b959d929dd29588">[email&#160;protected]</a></footer>
+</div>
+
+<!-- ======= CONTATTI ======= -->
+<div class="page" id="page-contatti">
+  <div class="page-header"><span class="ph-label">Entra in rete</span><h1>Contatti</h1><p class="ph-sub">Sei un'associazione, una comunità o un cittadino del Lodigiano? La rete è aperta a tutti.</p></div>
+  <div class="page-body">
+<!-- VOLONTARI SEZIONE -->
+    <div style="margin-top:3rem;background:linear-gradient(135deg,#0f5228,#1a7a3c);border-radius:8px;padding:2.5rem;color:#f4f9f5;">
+      <span style="font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--grano);display:block;margin-bottom:0.5rem;">Festa dei Popoli 23 Maggio 2026</span>
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#f4f9f5;margin-bottom:0.8rem;">Vuoi fare il volontario?</h3>
+      <p style="color:rgba(244,249,245,0.75);font-size:0.9rem;margin-bottom:1.2rem;">Giovani, pensionati, G2: c'è posto per tutti. Iscriviti e ti smisteremo all'associazione giusta per la tua disponibilità.</p>
+      <button class="btn btn-grano" onclick="document.getElementById('formVolontario').style.display=document.getElementById('formVolontario').style.display==='none'?'block':'none'">📋 Iscriviti come volontario →</button>
+      <div id="formVolontario" style="display:none;margin-top:1.5rem;background:rgba(255,255,255,0.07);border-radius:6px;padding:1.5rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <input id="vol-nome" placeholder="Il tuo nome" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.65rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.9rem;outline:none;">
+          <input id="vol-contatto" placeholder="Email o telefono" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.65rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.9rem;outline:none;">
+        </div>
+        <select id="vol-fascia" style="width:100%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:0.65rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.9rem;margin-bottom:1rem;outline:none;">
+          <option value="">Fascia oraria disponibile il 23 maggio</option>
+          <option>Mattina (10:00–13:00)</option>
+          <option>Pomeriggio (14:00–18:00)</option>
+          <option>Sera (18:00–22:00)</option>
+          <option>Tutta la giornata</option>
+        </select>
+        <textarea id="vol-note" placeholder="Competenze o preferenze (cucina, palco, accoglienza...)" rows="2" style="width:100%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.65rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.9rem;margin-bottom:1rem;outline:none;resize:vertical;"></textarea>
+        <button class="btn btn-grano" onclick="inviaVolontario()">Invia iscrizione →</button>
+        <div id="vol-ok" style="display:none;margin-top:0.8rem;color:#a8e6be;font-size:0.88rem;">✓ Iscrizione inviata! Ti contatteremo presto.</div>
+      </div>
+    </div>
+
+
+
+
+    <div class="contatti-grid">
+      <div class="contatto-item"><span class="c-label">Telefono / WhatsApp</span><a href="tel:+393701112314" style="font-size:1.05rem;">+39 370 111 2314</a></div>
+      <div class="contatto-item"><span class="c-label">Email</span><a href="/cdn-cgi/l/email-protection#dbb2b5bdb49baeb6bab5b2afbab7b4bfb2bcb2bab5baf5b2af" style="font-size:1.05rem;"><span class="__cf_email__" data-cfemail="375e59515877425a56595e43565b58535e505e565956195e43">[email&#160;protected]</span></a></div>
+      <div class="contatto-item"><span class="c-label">Facebook</span><a href="https://www.facebook.com/umanita.lodigiana/" target="_blank">facebook.com/umanita.lodigiana</a></div>
+      <div class="contatto-item"><span class="c-label">Instagram</span><a href="https://www.instagram.com/umanitalodigiana/" target="_blank">@umanitalodigiana</a></div>
+    </div>
+
+    <!-- CANALI DIRETTI -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1.8rem;">
+      <a href="https://wa.me/393701112314" target="_blank" style="display:flex;align-items:center;gap:1rem;background:#25D366;color:white;padding:1.2rem 1.5rem;border-radius:8px;text-decoration:none;transition:all 0.2s;font-family:'Source Serif 4',serif;" onmouseover="this.style.background='#1fba58'" onmouseout="this.style.background='#25D366'">
+        <span style="font-size:2rem;">💬</span>
+        <div>
+          <div style="font-weight:600;font-size:1rem;letter-spacing:0.02em;">Scrivici su WhatsApp</div>
+          <div style="font-size:0.78rem;opacity:0.85;margin-top:0.2rem;">+39 370 111 2314</div>
+        </div>
+      </a>
+      <a href="/cdn-cgi/l/email-protection#8de4e3ebe2cdf8e0ece3e4f9ece1e2e9e4eae4ece3eca3e4f9" style="display:flex;align-items:center;gap:1rem;background:var(--verde-scuro);color:white;padding:1.2rem 1.5rem;border-radius:8px;text-decoration:none;transition:all 0.2s;font-family:'Source Serif 4',serif;" onmouseover="this.style.background='var(--verde)'" onmouseout="this.style.background='var(--verde-scuro)'">
+        <span style="font-size:2rem;">✉️</span>
+        <div>
+          <div style="font-weight:600;font-size:1rem;letter-spacing:0.02em;">Mandaci un'email</div>
+          <div style="font-size:0.78rem;opacity:0.85;margin-top:0.2rem;"><span class="__cf_email__" data-cfemail="b0d9ded6dff0c5ddd1ded9c4d1dcdfd4d9d7d9d1ded19ed9c4">[email&#160;protected]</span></div>
+        </div>
+      </a>
+    </div>
+
+    <!-- FORM CONTATTO -->
+    <div style="margin-top:3rem;background:#edf5f0;border-radius:8px;padding:2.5rem;border:1px solid rgba(26,122,60,0.12);">
+      <span style="font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.5rem;">Modulo di contatto</span>
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--notte);margin-bottom:0.4rem;">Scrivici direttamente</h3>
+      <p style="font-size:0.88rem;color:#4a7055;margin-bottom:1.5rem;">Il tuo messaggio arriverà alla nostra email e potremo risponderti anche via WhatsApp.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div>
+          <label style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.3rem;">Nome e cognome *</label>
+          <input id="c-nome" type="text" placeholder="Mario Rossi" style="width:100%;background:white;border:1.5px solid rgba(26,122,60,0.2);color:var(--testo);padding:0.7rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--verde)'" onblur="this.style.borderColor='rgba(26,122,60,0.2)'">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.3rem;">Email *</label>
+          <input id="c-email" type="email" placeholder="mario@email.it" style="width:100%;background:white;border:1.5px solid rgba(26,122,60,0.2);color:var(--testo);padding:0.7rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--verde)'" onblur="this.style.borderColor='rgba(26,122,60,0.2)'">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div>
+          <label style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.3rem;">Telefono / WhatsApp</label>
+          <input id="c-tel" type="tel" placeholder="+39 333 000 0000" style="width:100%;background:white;border:1.5px solid rgba(26,122,60,0.2);color:var(--testo);padding:0.7rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--verde)'" onblur="this.style.borderColor='rgba(26,122,60,0.2)'">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.3rem;">Tipo di richiesta</label>
+          <select id="c-tipo" style="width:100%;background:white;border:1.5px solid rgba(26,122,60,0.2);color:var(--testo);padding:0.7rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.95rem;outline:none;">
+            <option value="">Seleziona...</option>
+            <option>Voglio aderire alla rete</option>
+            <option>Informazioni sulla Festa dei Popoli</option>
+            <option>Volontariato</option>
+            <option>Donazione o sponsorship</option>
+            <option>Collaborazione tra associazioni</option>
+            <option>Altro</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.3rem;">Messaggio *</label>
+        <textarea id="c-msg" rows="4" placeholder="Scrivi il tuo messaggio qui..." style="width:100%;background:white;border:1.5px solid rgba(26,122,60,0.2);color:var(--testo);padding:0.7rem 1rem;border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.95rem;outline:none;resize:vertical;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--verde)'" onblur="this.style.borderColor='rgba(26,122,60,0.2)'"></textarea>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-verde" onclick="inviaContatto()">Invia messaggio →</button>
+        <a href="https://wa.me/393701112314?text=Ciao%20Umanit%C3%A0%20Lodigiana%2C%20vi%20contatto%20dal%20sito..." target="_blank" class="btn btn-outline-dark" style="display:flex;align-items:center;gap:0.4rem;">💬 Apri WhatsApp</a>
+      </div>
+      <div id="c-ok" style="display:none;margin-top:1rem;background:#d4edda;color:#155724;padding:0.8rem 1.2rem;border-radius:4px;font-size:0.9rem;">✓ Grazie! Il tuo messaggio è stato inviato. Ti risponderemo presto
+
+        <script>
+(function(){
+  const words = ["Umanità","Humanity","Humanidad","Humanité","إنسانية","人道","Menschlichkeit","Humanidade","İnsanlık","Человечность"];
+  const el = document.getElementById('typing-word');
+  let i = 0;
+  function typeWord(word, cb){
+    let c = 0;
+    el.textContent = '';
+    const t = setInterval(()=>{
+      el.textContent += word[c]; c++;
+      if(c>=word.length){clearInterval(t);cb();}
+    },100);
+  }
+  function eraseWord(cb){
+    const t = setInterval(()=>{
+      el.textContent = el.textContent.slice(0,-1);
+      if(el.textContent.length===0){clearInterval(t);cb();}
+    },60);
+  }
+  function loop(){
+    setTimeout(()=>{
+      eraseWord(()=>{
+        i = (i+1) % words.length;
+        setTimeout(()=>typeWord(words[i], loop), 400);
+      });
+    }, 2500);
+  }
+  loop();
+})();
+</script>
