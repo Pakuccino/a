@@ -384,6 +384,22 @@ p{line-height:1.9;color:#2d4a35;font-size:0.97rem;margin-bottom:1rem;}
 .contatto-item a:hover{color:var(--verde);}
 
 
+/* VOLANTINO GRID */
+.volantino-grid{display:grid;grid-template-columns:1fr 1.4fr;max-width:960px;margin:0 auto;}
+/* PROGRAMMA ACCORDION */
+.prog-list{margin-top:1.5rem;list-style:none;padding:0;border:1px solid rgba(26,122,60,0.14);}
+.prog-btn{width:100%;background:none;border:none;border-bottom:1px solid rgba(26,122,60,0.1);padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;cursor:pointer;text-align:left;transition:background 0.15s;}
+.prog-btn:hover,.prog-btn[aria-expanded="true"]{background:#edf5f0;}
+.prog-time{font-size:0.72rem;letter-spacing:0.1em;color:var(--verde);font-variant-numeric:tabular-nums;min-width:46px;flex-shrink:0;font-weight:600;}
+.prog-icon{font-size:1.1rem;flex-shrink:0;}
+.prog-title{font-family:'Playfair Display',serif;font-size:0.97rem;color:var(--notte);flex:1;}
+.prog-arrow{font-size:0.75rem;color:var(--verde);transition:transform 0.25s;flex-shrink:0;}
+.prog-btn[aria-expanded="true"] .prog-arrow{transform:rotate(90deg);}
+.prog-body{max-height:0;overflow:hidden;transition:max-height 0.35s ease,padding 0.35s ease;padding:0 1.2rem;}
+.prog-body.open{max-height:200px;padding:0.8rem 1.2rem 1rem;}
+.prog-body p{font-size:0.85rem;color:#3d6047;margin:0;line-height:1.75;}
+/* TWO-COL RESPONSIVE */
+.two-col-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
 footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem;color:rgba(244,249,245,0.22);letter-spacing:0.08em;}
 
 /* MOBILE */
@@ -394,6 +410,8 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
   .chi-grid,.contatti-grid,.stampa-grid{grid-template-columns:1fr;}
 .cosa-slide{flex-direction:column;gap:0.8rem;padding:1.5rem 1.2rem;}
   .quick-links,.assi-strip{grid-template-columns:1fr 1fr;}
+  .volantino-grid{grid-template-columns:1fr;}
+  .two-col-grid{grid-template-columns:1fr;}
   .numeri-grid{grid-template-columns:repeat(2,1fr);}
   .countdown-inner{grid-template-columns:1fr;}
   .countdown-poster{max-height:280px;}
@@ -636,7 +654,7 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
 
   <!-- VOLANTINO + INFO -->
   <div style="background:var(--verde-scuro);">
-    <div style="display:grid;grid-template-columns:1fr 1.4fr;max-width:960px;margin:0 auto;">
+    <div class="volantino-grid">
 <img src="locandina.jpg" alt="Locandina Festa dei Popoli 2026" style="width:100%;height:100%;object-fit:cover;display:block;">
       <div style="padding:2.5rem 2rem;display:flex;flex-direction:column;justify-content:center;">
         <span class="section-label gold">Il tema del 2026</span>
@@ -672,6 +690,21 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
         <div class="cosa-dots" id="cosaDots"></div>
         <button class="cosa-arrow" id="cosaNext">&#8594;</button>
       </div>
+    </div>
+
+    <!-- PROGRAMMA DELLA GIORNATA -->
+    <div style="margin-top:3rem;">
+      <span class="section-label">Come si svolge</span>
+      <h2>Il programma della giornata</h2>
+      <p style="color:#3d6047;margin-bottom:0.2rem;">Una giornata intera al Parco Martiri della Libertà — dall'apertura al concerto finale. Tutto organizzato dalle comunità.</p>
+      <ul class="prog-list" id="progList">
+        <li><button class="prog-btn" aria-expanded="false"><span class="prog-time">10:00</span><span class="prog-icon">🌅</span><span class="prog-title">Apertura del parco e accoglienza</span><span class="prog-arrow">▶</span></button><div class="prog-body"><p>Arrivo delle comunità, allestimento degli stand gastronomici e degli spazi espositivi. Il parco apre le porte a tutti — famiglie, associazioni, curiosi.</p></div></li>
+        <li><button class="prog-btn" aria-expanded="false"><span class="prog-time">11:00</span><span class="prog-icon">🎭</span><span class="prog-title">Spettacoli e danze delle comunità</span><span class="prog-arrow">▶</span></button><div class="prog-body"><p>Sul palco principale le comunità straniere del Lodigiano presentano musica, danze e teatro. Regia affidata a loro: storie di tutto il mondo, senza traduttori.</p></div></li>
+        <li><button class="prog-btn" aria-expanded="false"><span class="prog-time">12:30</span><span class="prog-icon">🍽️</span><span class="prog-title">Pranzo multiculturale — Cibo dal Mondo</span><span class="prog-arrow">▶</span></button><div class="prog-body"><p>15 comunità aprono i loro stand: piatti tradizionali da 22 nazioni in un unico parco. Condividere il cibo è il gesto più antico di pace.</p></div></li>
+        <li><button class="prog-btn" aria-expanded="false"><span class="prog-time">14:00</span><span class="prog-icon">⚽</span><span class="prog-title">Torneo di Calcio delle comunità</span><span class="prog-arrow">▶</span></button><div class="prog-body"><p>Squadre formate da comunità diverse si sfidano in amicizia. Sul campo non esistono stranieri — solo giocatori e tifosi che condividono la stessa passione.</p></div></li>
+        <li><button class="prog-btn" aria-expanded="false"><span class="prog-time">15:30</span><span class="prog-icon">🎨</span><span class="prog-title">Laboratori creativi e artigianato</span><span class="prog-arrow">▶</span></button><div class="prog-body"><p>Workshop per adulti e bambini: artigianato, arte e tradizioni da tutto il mondo. Mani che lavorano insieme creano ponti che durano nel tempo.</p></div></li>
+        <li><button class="prog-btn" aria-expanded="false" style="border-bottom:none;"><span class="prog-time">19:00</span><span class="prog-icon">🎶</span><span class="prog-title">Concerto finale — Chiusura della Festa</span><span class="prog-arrow">▶</span></button><div class="prog-body"><p>La giornata si chiude con musica dal vivo. Un momento per stare insieme, riflettere e portare a casa qualcosa di bello da ogni angolo del mondo.</p></div></li>
+      </ul>
     </div>
 
     <!-- L'EDIZIONE 2025 -->
@@ -779,7 +812,7 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
     <div style="margin-top:3rem;padding:2.5rem;background:#edf5f0;border-left:4px solid var(--verde);">
       <span style="font-size:0.66rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--verde);display:block;margin-bottom:0.6rem;">La nostra visione</span>
       <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.5rem,3vw,2.2rem);color:var(--notte);margin-bottom:1.2rem;">Perché il multiculturalismo è una ricchezza</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+      <div class="two-col-grid">
         <div>
           <p style="color:#2d4a35;">Il Lodigiano è un territorio che da decenni accoglie persone da ogni parte del mondo. Queste comunità non sono ospiti di passaggio: lavorano, crescono i loro figli, costruiscono il futuro di questa terra insieme a noi.</p>
           <p style="color:#2d4a35;">Celebrare la diversità non significa ignorare le differenze. Significa riconoscere che ogni cultura porta con sé saperi, tradizioni e visioni del mondo che arricchiscono tutti. La Festa dei Popoli è il momento in cui questo diventa visibile, tangibile, festoso.</p>
@@ -1163,6 +1196,19 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
       </div>
       <div id="c-ok" style="display:none;margin-top:1rem;background:#d4edda;color:#155724;padding:0.8rem 1.2rem;border-radius:4px;font-size:0.9rem;">✓ Grazie! Il tuo messaggio è stato inviato. Ti risponderemo presto
 
+        <script>
+// Programma accordion
+(function(){
+  var btns=document.querySelectorAll('.prog-btn');
+  btns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var expanded=this.getAttribute('aria-expanded')==='true';
+      this.setAttribute('aria-expanded',expanded?'false':'true');
+      this.nextElementSibling.classList.toggle('open',!expanded);
+    });
+  });
+})();
+</script>
         <script>
 (function(){
   var track=document.getElementById('cosaTrack');
