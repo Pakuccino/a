@@ -220,6 +220,8 @@ p{line-height:1.9;color:#2d4a35;font-size:0.97rem;margin-bottom:1rem;}
 .btn{padding:0.65rem 1.4rem;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:all 0.25s;font-family:'Source Serif 4',serif;display:inline-block;}
 .btn-verde{background:var(--verde);color:white;}.btn-verde:hover{background:var(--verde-chiaro);}
 .btn-grano{background:var(--grano);color:var(--notte);}.btn-grano:hover{background:#d4b53a;}
+.btn-grano-glow{position:relative;overflow:hidden;animation:festaExtreme 3s ease-in-out infinite,festaShake 3s ease-in-out infinite;}
+.btn-grano-glow::before{content:'';position:absolute;top:-50%;left:-75%;width:50%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,220,120,0.45),transparent);animation:festaSweep 5s ease-in-out infinite;pointer-events:none;}
 .btn-outline{background:transparent;color:rgba(244,249,245,0.8);border:1px solid rgba(244,249,245,0.3);}.btn-outline:hover{border-color:var(--grano);color:var(--grano);}
 .btn-outline-dark{background:transparent;color:var(--verde);border:1px solid rgba(26,122,60,0.35);}.btn-outline-dark:hover{background:var(--verde);color:white;}
 
@@ -454,7 +456,7 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
       <div class="stat"><span class="num">16+</span><span class="label">Anni insieme</span></div>
     </div>
     <div class="hero-cta">
-      <a class="btn btn-grano" href="#" data-goto="festa">🎉 Festa dei Popoli 2026</a>
+      <a class="btn btn-grano btn-grano-glow" href="#" data-goto="festa">🎉 Festa dei Popoli 2026</a>
       <a class="btn btn-outline" href="#" data-goto="chi-siamo">Scopri chi siamo</a>
     </div>
 
@@ -470,7 +472,7 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
   <!-- COUNTDOWN FESTA BLOCK -->
   <div class="countdown-section">
     <div class="countdown-inner">
-      <div class="countdown-poster" style="display:flex;align-items:center;justify-content:center;background:#0f5228;padding:1rem;">
+      <div class="countdown-poster">
 <img src="locandina.jpg" alt="Locandina Festa dei Popoli 2026">
       </div>
       <div class="countdown-content">
