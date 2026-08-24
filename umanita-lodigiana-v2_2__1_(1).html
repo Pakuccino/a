@@ -1250,21 +1250,21 @@ footer{background:var(--notte);text-align:center;padding:1.5rem;font-size:0.7rem
     const t = setInterval(()=>{
       el.textContent += word[c]; c++;
       if(c>=word.length){clearInterval(t);cb();}
-    },100);
+    },50);
   }
   function eraseWord(cb){
     const t = setInterval(()=>{
       el.textContent = el.textContent.slice(0,-1);
       if(el.textContent.length===0){clearInterval(t);cb();}
-    },60);
+    },40);
   }
   function loop(){
     setTimeout(()=>{
       eraseWord(()=>{
         i = (i+1) % words.length;
-        setTimeout(()=>typeWord(words[i], loop), 400);
+        setTimeout(()=>typeWord(words[i], loop), 300);
       });
-    }, 2500);
+    }, 1500);
   }
   loop();
 })();
